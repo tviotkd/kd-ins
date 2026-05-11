@@ -336,7 +336,9 @@ if (reply.includes("✅ התביעה נשלחה")) {
                       color:accent, flexShrink:0, transition:"all 0.2s" }}>
 {files.length>0 ? `${files.length} קבצים` : ""}
                  </button>
-
+{files.length > 0 && <div style={{ padding:"4px 14px 0" }}>
+  {files.map((f,i) => <span key={i} style={{ background:"#e8f5e9", color:"#2e7d32", borderRadius:12, padding:"3px 10px", fontSize:12, margin:3, display:"inline-flex", gap:4 }}>✅ {f.name}</span>)}
+  </div>}
                   <textarea value={input}
                     onChange={e => setInput(e.target.value)}
                     onKeyDown={e => { if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendMessage(input);} }}
