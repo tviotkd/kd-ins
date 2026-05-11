@@ -116,7 +116,14 @@
           const reply = data.content?.[0]?.text || "מצטער, הייתה שגיאה.";
           setMessages(p => [...p, { role:"assistant", content:reply }]);
           setHistory([...newHistory, { role:"assistant", content:reply }]);
-          if (reply.includes("✅ התביעה נשלחה")) setSubmitted(true);
+      if (reply.includes("✅ התביעה נשלחה")) {
+  setSubmitted(true);
+  emailjs.send("service_md105q6", "template_lw08y8b", {
+    claim_type: selectedType?.label || "לא צוין",
+    conversation: newHistory.map(m => (m.role === "user" ? "לקוח: " : "בוט: ") + (typeof m.content === "string" ? m.content : "")).join("\n"),
+    files_list: files.map(f => f.name).join(", ") || "לא הועלו קבצים"
+  }, "7qKJQpX7uzLcxdDMl");
+}
         } catch {
           setMessages(p => [...p, { role:"assistant", content:"אופס! בעיית חיבור. נסה שוב 🙏" }]);
         } finally { setLoading(false); }
