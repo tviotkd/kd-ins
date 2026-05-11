@@ -121,8 +121,8 @@
   setSubmitted(true);
   emailjs.send("service_md105q6", "template_lw08y8b", {
 claim_type: selectedType?.label || "לא צוין",
-client_name: newHistory.find(m => m.role === "user")?.content || "לא צוין",
-client_id: (() => { const match = newHistory.map(m => typeof m.content === "string" ? m.content : "").join(" ").match(/\d{9}/); return match ? match[0] : "לא צוין"; })(),
+client_name: (() => { const msgs = newHistory.filter(m => m.role === "user").map(m => typeof m.content === "string" ? m.content : ""); return msgs[0] || "לא צוין"; })(),
+client_id: (() => { const text = newHistory.filter(m => m.role === "user").map(m => typeof m.content === "string" ? m.content : "").join(" "); const match = text.match(/\b\d{9}\b/); return match ? match[0] : "לא צוין"; })(),
 conversation: newHistory.map(m => (m.role === "user" ? "לקוח: " : "בוט: ") + (typeof m.content === "string" ? m.content : "")).join("\n"),
 files_list: files.map(f => f.name).join(", ") || "לא הועלו קבצים"
   }, "7qKJQpX7uzLcxdDMl");
