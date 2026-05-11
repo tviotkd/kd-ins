@@ -146,18 +146,7 @@ if (reply.includes("✅ התביעה נשלחה")) {
     files_list: files.length > 0 ? files.map(f => f.name).join(", ") + (driveUrl ? "\n\nקישור לקבצים: " + driveUrl : "") : "לא הועלו קבצים"
   }, "7qKJQpX7uzLcxdDMl");
 }
-  setSubmitted(true);
-  const userMsgs = newHistory.filter(m => m.role === "user").map(m => typeof m.content === "string" ? m.content : "");
-  const allText = userMsgs.join(" ");
-  const idMatch = allText.match(/\b\d{9}\b/);
-  emailjs.send("service_md105q6", "template_lw08y8b", {
-    claim_type: selectedType?.label || "לא צוין",
-    client_name: userMsgs[0] || "לא צוין",
-    client_id: idMatch ? idMatch[0] : "לא צוין",
-    conversation: newHistory.map(m => (m.role === "user" ? "לקוח: " : "בוט: ") + (typeof m.content === "string" ? m.content : "")).join("\n"),
-    files_list: files.map(f => f.name).join(", ") || "לא הועלו קבצים"
-  }, "7qKJQpX7uzLcxdDMl");
-}
+ 
         } catch {
           setMessages(p => [...p, { role:"assistant", content:"אופס! בעיית חיבור. נסה שוב 🙏" }]);
         } finally { setLoading(false); }
