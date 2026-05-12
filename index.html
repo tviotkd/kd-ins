@@ -120,7 +120,7 @@ const uploadToGoogleDrive = async (clientName, filesList) => {
           const res = await fetch("https://kd-chat.tviot.workers.dev", {
             method:"POST",
             headers:{ "Content-Type":"application/json" },
-            body: JSON.stringify({ model:"claude-3-5-haiku-20241022", max_tokens:1000, system:selectedType.prompt, messages:newHistory })
+            body: JSON.stringify({ model:"claude-sonnet-4-5", max_tokens:1000, system:selectedType.prompt, messages:newHistory })
           });
           const data = await res.json();
           const reply = data.content?.[0]?.text || "מצטער, הייתה שגיאה.";
