@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>הגשת תביעה - Kaplan & Dahan</title>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Heebo', sans-serif; direction: rtl; background: linear-gradient(160deg,#f8fafc,#e2e8f0); min-height: 100vh; }
+    @keyframes bounce { 0%,80%,100%{transform:translateY(0)} 40%{transform:translateY(-6px)} }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes popIn { from{opacity:0;transform:scale(0.92)} to{opacity:1;transform:scale(1)} }
+    textarea { font-family: 'Heebo', sans-serif; direction: rtl; }
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-thumb { border-radius: 10px; background: #cbd5e1; }
+    .tbtn { transition: all 0.18s !important; cursor: pointer; }
+    .tbtn:hover { transform: translateY(-2px) !important; box-shadow: 0 8px 24px rgba(0,0,0,0.13) !important; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useRef, useEffect } = React;
+    const COMMON_RULES = "חוקים חשובים:\n- אל תחזור על פרטים שהלקוח כבר נתן\n- שאל שאלה אחת בכל פעם בלבד\n- אישור ניהול חשבון בנק או שיק מבוטל — יוזכר פעם אחת בלבד";
+    const CLAIM_TYPES = [
+      { id:"consultation", icon:"🩺", label:"ייעוץ רפואי מומחה", color:"#0ea5e9", light:"#e0f2fe",
+        sublabel:"ייעוץ עם רופא מומחה",
+        docs:"קבלה + סיכום ביקור + אישור ניהול חשבון / שיק מבוטל",
+        prompt:"אתה עוזר לתביעת ביטוח בריאות בנושא ייעוץ רפואי עם רופא מומחה. דבר בעברית בלבד. אל תשאל על שמות רופאים.\nאנחנו כאן לעזור לך להגיש את תביעתך במהירות ובקלות!\n"+COMMON_RULES+"\nתהליך:\n1. בקש שם מלא\n2. אחרי שקיבלת שם — בקש מספר תעודת זהות\n3. בקש להעלות: קבלה, סיכום ביקור, ואישור ניהול חשבון או שיק מבוטל\n4. אחרי אישור — כתוב בדיוק: \"✅ התביעה נשלחה!\""
+      },
+      { id:"alternative", icon:"🌿", label:"רפואה משלימה ופיזיותרפיה", color:"#22c55e", light:"#dcfce7",
+        sublabel:"טיפולים אלטרנטיביים כולל פיזיותרפיה",
+        docs:"הפניה לטיפול + תעודת מטפל + קבלות + אישור ניהול חשבון / שיק מבוטל",
+        prompt:"אתה עוזר לתביעת ביטוח בריאות בנושא רפואה משלימה ופיזיותרפיה. דבר בעברית בלבד.\nאנחנו כאן לעזור לך להגיש את תביעתך במהירות ובקלות!\n"+COMMON_RULES+"\nתהליך:\n1. בקש שם מלא\n2. בקש מספר תעודת זהות\n3. בקש להעלות: הפניה לטיפול, תעודת מטפל מוסמך, קבלות, ואישור ניהול חשבון או שיק מבוטל\n4. אחרי אישור — כתוב בדיוק: \"✅ התביעה נשלחה!\"\nחשוב — תשלום לחשבון המבוטח בלבד."
+      },
+      { id:"diagnostic", icon:"🔬", label:"בדיקה אבחנתית", color:"#8b5cf6", light:"#ede9fe",
+        sublabel:"MRI, CT, בדיקות הריון ועוד",
+        docs:"הפניה לבדיקה + סיכום ביקור רפואי + קבלה + אישור ניהול חשבון / שיק מבוטל",
+        prompt:"אתה עוזר לתביעת ביטוח בריאות בנושא בדיקה אבחנתית. דבר בעברית בלבד.\nאנחנו כאן לעזור לך להגיש את תביעתך במהירות ובקלות!\n"+COMMON_RULES+"\nתהליך:\n1. בקש שם מלא\n2. בקש מספר תעודת זהות\n3. בקש להעלות: הפניה לבדיקה, סיכום ביקור רפואי, קבלה, ואישור ניהול חשבון או שיק מבוטל\n4. אחרי אישור — כתוב בדיוק: \"✅ התביעה נשלחה!\""
+      },
+      { id:"surgery", icon:"🏥", label:"ניתוח בארץ", color:"#ef4444", light:"#fee2e2",
+        sublabel:"פוליסות מ-02/2016 בלבד — לפני כן פנה לסוכן",
+        docs:"הפניה לניתוח + קבלה ייעוץ טרום ניתוח + אישור ניהול חשבון / שיק מבוטל",
+        prompt:"אתה עוזר לתביעת ביטוח בריאות בנושא ניתוח בארץ. דבר בעברית בלבד. היה חם וסבלני.\nאנחנו כאן לעזור לך להגיש את תביעתך במהירות ובקלות!\n"+COMMON_RULES+"\nכיסוי קיים רק בפוליסות מ-02/2016 ואילך. לפני כן — הפנה לסוכן 03-3731410.\nתהליך:\n1. בקש שם מלא\n2. בקש מספר תעודת זהות\n3. שאל מתי נרכשה הפוליסה\n4. אם מתאים — בקש: הפניה לניתוח, קבלה ייעוץ טרום ניתוח, אישור ניהול חשבון או שיק מבוטל\n5. אחרי אישור — כתוב בדיוק: \"✅ התביעה נשלחה!\""
+      },
+      { id:"child", icon:"👶", label:"התפתחות הילד", color:"#f59e0b", light:"#fef3c7",
+        sublabel:"פסיכולוג, קלינאי, ריפוי בעיסוק, שחייה/רכיבה טיפולית ועוד...",
+        docs:"הפניה מרופא מומחה + קבלות + אישור ניהול חשבון / שיק מבוטל",
+        prompt:"אתה עוזר לתביעת ביטוח בריאות בנושא התפתחות הילד. דבר בעברית בלבד. היה חם.\nאנחנו כאן לעזור לך להגיש את תביעתך במהירות ובקלות!\n"+COMMON_RULES+"\nהפניה חייבת מ: מומחה התפתחות הילד (ותק 3+ שנים) או נוירולוג ילדים בלבד. אחרת — הפנה לסוכן 03-3731410.\nתהליך:\n1. בקש שם מלא\n2. בקש מספר תעודת זהות\n3. בקש להעלות: הפניה ממומחה, קבלות, ואישור ניהול חשבון או שיק מבוטל\n4. אחרי אישור — כתוב בדיוק: \"✅ התביעה נשלחה!\""
+      },
+      { id:"accident", icon:"🚑", label:"תאונות אישיות — שברים", color:"#db2777", light:"#fce7f3",
+        sublabel:"שברים בלבד — לכל דבר אחר פנה לסוכן",
+        docs:"דו\"ח רפואי המציין שבר + אישור ניהול חשבון / שיק מבוטל",
+        prompt:"אתה עוזר לתביעת ביטוח בנושא תאונות אישיות — שברים בלבד. דבר בעברית בלבד. היה חם.\n"+COMMON_RULES+"\nקטגוריה זו לשברים בלבד. פציעה אחרת — הפנה לסוכן 03-3731410.\nתהליך:\n1. בקש שם מלא\n2. בקש מספר תעודת זהות\n3. וודא שמדובר בשבר\n4. בקש: דו\"ח רפואי המציין שבר, ואישור ניהול חשבון או שיק מבוטל\n5. אחרי אישור — כתוב בדיוק: \"✅ התביעה נשלחה!\""
+      }
+    ];
+
+    const TypingDots = ({color}) => (
+      <div style={{display:"flex",gap:5,padding:"8px 4px",alignItems:"center"}}>
+        {[0,1,2].map(i=><div key={i} style={{width:8,height:8,borderRadius:"50%",background:color,animation:"bounce 1.2s infinite",animationDelay:`${i*0.2}s`}}/>)}
+      </div>
+    );
+
+    function App() {
+      const [ct, setCt] = useState(null);
+      const [messages, setMessages] = useState([]);
+      const [input, setInput] = useState("");
+      const [loading, setLoading] = useState(false);
+      const [files, setFiles] = useState([]);
+      const [submitted, setSubmitted] = useState(false);
+      const [history, setHistory] = useState([]);
+      const bottomRef = useRef(null);
+      const fileRef = useRef(null);
+      useEffect(()=>{bottomRef.current?.scrollIntoView({behavior:"smooth"});},[messages,loading]);
+      const reset=()=>{setCt(null);setMessages([]);setHistory([]);setSubmitted(false);setFiles([]);setInput("");};
+      const startChat=(type)=>{
+        setCt(type);
+        setMessages([{role:"assistant",content:`היי! 👋 אני הרובוט החכם של סוכנות Kaplan & Dahan 🤖\nאני כאן לעזור לך להגיש את תביעתך במהירות ובקלות!\n\nתצטרך:\n• ${type.docs}\n\nנתחיל — מה שמך המלא?`}]);
+        setHistory([]);setSubmitted(false);setFiles([]);
+      };
+      const sendMessage=async(text)=>{
+        if(!text.trim()&&files.length===0)return;
+        if(submitted||!ct)return;
+        const fileNote=files.length>0?`\n[הועלו ${files.length} קבצים: ${files.map(f=>f.name).join(", ")}]`:"";
+        const userMsg={role:"user",content:text,files:[...files]};
+        const newHistory=[...history,{role:"user",content:text+fileNote}];
+        setMessages(p=>[...p,userMsg]);setInput("");setFiles([]);setLoading(true);
+        try{
+          const res=await fetch("https://kd-chat.tviot.workers.dev",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-5",max_tokens:1000,system:ct.prompt,messages:newHistory})});
+          const data=await res.json();
+          const reply=data.content?.[0]?.text||"מצטער, הייתה שגיאה.";
+          setMessages(p=>[...p,{role:"assistant",content:reply}]);
+          setHistory([...newHistory,{role:"assistant",content:reply}]);
+          if(reply.includes("✅ התביעה נשלחה"))setSubmitted(true);
+        }catch{setMessages(p=>[...p,{role:"assistant",content:"אופס! בעיית חיבור. נסה שוב 🙏"}]);}
+        finally{setLoading(false);}
+      };
+      const accent=ct?.color||"#1e293b";
+      const light=ct?.light||"#f1f5f9";
+      return(
+        <div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",padding:12}}>
+          <div style={{width:"100%",maxWidth:660,borderRadius:24,overflow:"hidden",boxShadow:"0 20px 60px rgba(0,0,0,0.13)",display:"flex",flexDirection:"column"}}>
+            <div style={{background:"#fff",padding:"12px 20px",borderBottom:"1px solid #f1f5f9",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+              <div style={{display:"flex",alignItems:"center",gap:10}}>
+                <div style={{width:40,height:40,borderRadius:10,background:"#1e293b",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:18,fontWeight:800}}>KD</div>
+                <div><div style={{fontSize:14,fontWeight:800,color:"#1e293b"}}>KAPLAN & DAHAN</div><div style={{fontSize:11,color:"#94a3b8"}}>פירמת ביטוח ופיננסים</div></div>
+              </div>
+              <a href="tel:03-3731410" style={{display:"flex",alignItems:"center",gap:6,background:ct?accent:"#1e293b",color:"#fff",borderRadius:20,padding:"7px 14px",textDecoration:"none",fontSize:13,fontWeight:700,fontFamily:"'Heebo',sans-serif",transition:"background 0.3s"}}>📞 03-3731410</a>
+            </div>
+            <div style={{background:ct?accent:"#1e293b",padding:"11px 20px",display:"flex",alignItems:"center",justifyContent:"space-between",transition:"background 0.4s"}}>
+              <div style={{display:"flex",alignItems:"center",gap:10}}>
+                <div style={{width:34,height:34,borderRadius:"50%",background:"rgba(255,255,255,0.2)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}>{ct?ct.icon:"🏥"}</div>
+                <div><div style={{color:"#fff",fontWeight:700,fontSize:14}}>{ct?`תביעת ${ct.label}`:"מערכת תביעות ביטוח בריאות"}</div><div style={{color:"rgba(255,255,255,0.7)",fontSize:11.5}}>{loading?"✍️ מקליד...":ct?"🟢 פעיל":"בחר סוג תביעה להתחלה"}</div></div>
+              </div>
+              {ct&&<button onClick={reset} style={{background:"rgba(255,255,255,0.18)",border:"none",color:"#fff",borderRadius:20,padding:"5px 13px",cursor:"pointer",fontSize:12,fontFamily:"'Heebo',sans-serif"}}>← חזור</button>}
+            </div>
+            {!ct?(
+              <div style={{background:"#fff",padding:"24px 20px"}}>
+                <div style={{textAlign:"center",marginBottom:22}}><div style={{fontSize:20,fontWeight:800,color:"#1e293b",marginBottom:4}}>איזה סוג תביעה תרצה להגיש?</div><div style={{fontSize:13.5,color:"#64748b"}}>בחר קטגוריה ונתחיל</div></div>
+                <div style={{display:"flex",flexDirection:"column",gap:10}}>
+                  {CLAIM_TYPES.map((type,i)=>(
+                    <button key={type.id} className="tbtn" onClick={()=>startChat(type)} style={{display:"flex",alignItems:"center",gap:14,padding:"15px 18px",background:"#fff",border:"2px solid #f1f5f9",borderRadius:14,textAlign:"right",width:"100%",animation:`fadeUp 0.28s ease ${i*0.06}s both`,boxShadow:"0 2px 8px rgba(0,0,0,0.05)"}}>
+                      <div style={{width:48,height:48,borderRadius:12,flexShrink:0,background:type.light,display:"flex",alignItems:"center",justifyContent:"center",fontSize:24}}>{type.icon}</div>
+                      <div style={{flex:1}}>
+                        <div style={{fontSize:15,fontWeight:700,color:"#1e293b",marginBottom:2}}>{type.label}</div>
+                        {type.sublabel&&<div style={{fontSize:11.5,color:type.color,fontWeight:600,marginBottom:2}}>{type.sublabel}</div>}
+                        <div style={{fontSize:11,color:"#94a3b8"}}>📎 {type.docs}</div>
+                      </div>
+                      <div style={{width:30,height:30,borderRadius:"50%",background:type.light,display:"flex",alignItems:"center",justifyContent:"center",color:type.color,fontSize:16}}>←</div>
+                    </button>
+                  ))}
+                </div>
+                <div style={{marginTop:16,padding:"10px 16px",background:"#f8fafc",borderRadius:10,fontSize:12,color:"#94a3b8",textAlign:"center"}}>🔒 המידע שלך מאובטח · tviot@kd-ins.co.il</div>
+                <a href="tel:03-3731410" style={{marginTop:10,display:"flex",alignItems:"center",justifyContent:"center",gap:10,padding:"13px 20px",borderRadius:12,textDecoration:"none",background:"#f0fdf4",border:"2px solid #bbf7d0",color:"#15803d",fontFamily:"'Heebo',sans-serif"}}>
+                  <span style={{fontSize:20}}>📞</span>
+                  <div style={{textAlign:"center"}}><div style={{fontSize:13}}>מעדיפים לדבר עם נציג?</div><div style={{fontSize:17,fontWeight:800}}>03-3731410</div></div>
+                </a>
+              </div>
+            ):(
+              <>
+                <div style={{background:"#f8fafc",padding:"18px 16px 10px",overflowY:"auto",minHeight:360,maxHeight:460,display:"flex",flexDirection:"column",gap:12}}>
+                  {messages.map((m,i)=>(
+                    <div key={i} style={{display:"flex",flexDirection:m.role==="user"?"row":"row-reverse",alignItems:"flex-end",gap:8,animation:"popIn 0.22s ease"}}>
+                      <div style={{width:32,height:32,borderRadius:"50%",flexShrink:0,background:m.role==="user"?"#e2e8f0":light,display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}}>{m.role==="user"?"🧑":ct.icon}</div>
+                      <div style={{maxWidth:"75%"}}>
+                        <div style={{padding:"10px 14px",borderRadius:m.role==="user"?"18px 18px 18px 4px":"18px 18px 4px 18px",background:m.role==="user"?"#fff":accent,color:m.role==="user"?"#1e293b":"#fff",fontSize:14,lineHeight:1.7,whiteSpace:"pre-wrap",wordBreak:"break-word",boxShadow:"0 2px 8px rgba(0,0,0,0.06)",border:m.role==="user"?"1px solid #e2e8f0":"none"}}>{m.content}</div>
+                        {m.files?.length>0&&<div style={{display:"flex",flexWrap:"wrap",gap:4,marginTop:4}}>{m.files.map((f,fi)=><div key={fi} style={{background:light,borderRadius:20,padding:"2px 10px",fontSize:11.5,color:accent}}>📎 {f.name}</div>)}</div>}
+                      </div>
+                    </div>
+                  ))}
+                  {loading&&<div style={{display:"flex",flexDirection:"row-reverse",alignItems:"flex-end",gap:8}}><div style={{width:32,height:32,borderRadius:"50%",background:light,display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}}>{ct.icon}</div><div style={{padding:"4px 14px",borderRadius:"18px 18px 4px 18px",background:accent,boxShadow:"0 2px 8px rgba(0,0,0,0.07)"}}><TypingDots color="#fff"/></div></div>}
+                  {submitted&&(
+                    <div style={{textAlign:"center",padding:"20px",background:"#f0fdf4",border:"2px solid #86efac",borderRadius:16,animation:"popIn 0.4s ease"}}>
+                      <div style={{fontSize:38,marginBottom:6}}>🎉</div>
+                      <div style={{fontWeight:800,color:"#15803d",fontSize:17}}>התביעה הוגשה בהצלחה!</div>
+                      <div style={{color:"#16a34a",fontSize:14,marginTop:8,lineHeight:1.7}}>✅ המסמכים התקבלו ועברו לבדיקה<br/>נעדכן אותך בהתקדמות התביעה בהקדם 😊</div>
+                      <div style={{color:"#94a3b8",fontSize:12,marginTop:6}}>לבירורים: 03-3731410</div>
+                      <button onClick={reset} style={{marginTop:12,background:"#22c55e",color:"#fff",border:"none",borderRadius:20,padding:"8px 20px",fontSize:13,cursor:"pointer",fontFamily:"'Heebo',sans-serif",fontWeight:700}}>הגש תביעה נוספת ←</button>
+                    </div>
+                  )}
+                  <div ref={bottomRef}/>
+                </div>
+                {files.length>0&&<div style={{background:"#fff",borderTop:`1px solid ${light}`,padding:"7px 14px",display:"flex",flexWrap:"wrap",gap:6}}>{files.map((f,i)=><div key={i} style={{background:light,borderRadius:20,padding:"3px 10px 3px 12px",fontSize:12,color:accent,display:"flex",alignItems:"center",gap:5}}>📎 {f.name.length>20?f.name.slice(0,18)+"…":f.name}<button onClick={()=>setFiles(p=>p.filter((_,x)=>x!==i))} style={{background:"none",border:"none",cursor:"pointer",color:accent,fontSize:15,padding:0,lineHeight:1}}>×</button></div>)}</div>}
+                <div style={{background:"#fff",borderTop:"1px solid #f1f5f9",padding:"12px 14px",display:"flex",gap:8,alignItems:"flex-end"}}>
+                  <input ref={fileRef} type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" onChange={e=>{setFiles(p=>[...p,...Array.from(e.target.files)]);e.target.value="";}} style={{display:"none"}}/>
+                  <button onClick={()=>fileRef.current?.click()} disabled={submitted} style={{width:42,height:42,borderRadius:"50%",border:`2px solid ${files.length>0?accent:"#e2e8f0"}`,background:files.length>0?light:"#f8fafc",cursor:submitted?"not-allowed":"pointer",fontSize:files.length>0?12:19,display:"flex",alignItems:"center",justifyContent:"center",color:accent,flexShrink:0,transition:"all 0.2s"}}>{files.length>0?`${files.length}📎`:"📎"}</button>
+                  <textarea value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendMessage(input);}}} placeholder="כתוב כאן... (Enter לשליחה)" rows={1} disabled={loading||submitted} style={{flex:1,border:"2px solid #e2e8f0",borderRadius:14,padding:"10px 13px",fontSize:14,outline:"none",resize:"none",lineHeight:1.6,background:"#f8fafc",maxHeight:100,overflowY:"auto",opacity:submitted?0.5:1,transition:"border-color 0.2s"}} onFocus={e=>e.target.style.borderColor=accent} onBlur={e=>e.target.style.borderColor="#e2e8f0"}/>
+                  <button onClick={()=>sendMessage(input)} disabled={(!input.trim()&&files.length===0)||loading||submitted} style={{width:42,height:42,borderRadius:"50%",border:"none",background:(!input.trim()&&files.length===0)||loading||submitted?"#e2e8f0":accent,color:(!input.trim()&&files.length===0)||loading||submitted?"#94a3b8":"#fff",cursor:(!input.trim()&&files.length===0)||loading||submitted?"not-allowed":"pointer",fontSize:17,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"all 0.2s"}}>➤</button>
+                </div>
+                <div style={{background:"#f8fafc",padding:"6px 14px",fontSize:11,color:"#94a3b8",textAlign:"center",borderTop:"1px solid #f1f5f9"}}>🔒 מאובטח · PDF, תמונות ו-Word מתקבלים</div>
+              </>
+            )}
+          </div>
+        </div>
+      );
+    }
+    ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+  </script>
+</body>
+</html>
