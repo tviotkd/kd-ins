@@ -1,447 +1,455 @@
-<!DOCTYPE html>
-<html lang="he" dir="rtl">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>הגשת תביעה - Kaplan & Dahan</title>
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-  <script>emailjs.init("7qKJQpX7uzLcxdDMl");</script>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
-    #root { width: 100%; max-width: 480px; margin: 0 auto; padding: 12px; }
-  </style>
-</head>
-<body>
-<div id="root"></div>
-<script type="text/babel">
+import { useState, useRef, useEffect } from "react";
  
-const EMAILJS_SERVICE_ID = "service_md105q6";
-const EMAILJS_TEMPLATE_ID = "template_lw08y8b";
-const API_URL = "https://kd-chat.tviot.workers.dev";
+const BANK_DOC_NOTE = `\n\nחשוב מאוד — מסמך בנקאי לצורך העברת תשלום:\nיש לבקש מהלקוח להעלות אחד מהבאים:\n- אישור ניהול חשבון בנק (כולל שם, מספר חשבון, סניף)\n- שיק מבוטל\nאם לא הועלה — הזכר זאת בסוף לפני שליחה.`;
+ 
+const COMMON_RULES = `חוקים חשובים:
+- אל תחזור על פרטים שהלקוח כבר נתן
+- שאל שאלה אחת בכל פעם בלבד
+- אישור ניהול חשבון בנק או שיק מבוטל — יוזכר פעם אחת בלבד, בבקשת המסמכים. אל תחזור עליו בשום שלב אחר`;
  
 const CLAIM_TYPES = [
   {
-    id: "consult",
-    icon: "🩺",
-    title: "ייעוץ רפואי",
-    sub: "ייעוץ עם רופא מומחה",
-    color: "#2563eb",
-    bg: "#eff6ff",
-    docs: ["חשבונית", "סיכום ביקור", "אישור ניהול חשבון / שיק מבוטל"],
-    prompt: `אתה עוזר ידידותי של סוכנות ביטוח Kaplan & Dahan לתביעות ביטוח בריאות.
-סוג תביעה: ייעוץ רפואי עם רופא מומחה.
-מסמכים נדרשים: חשבונית, סיכום ביקור, אישור ניהול חשבון או שיק מבוטל.
-שאל שם מלא, ואז ת.ז בנפרד, ואז בקש את המסמכים.
+    id: "consultation", icon: "🩺", label: "ייעוץ רפואי מומחה", color: "#0ea5e9", light: "#e0f2fe",
+    sublabel: "ייעוץ עם רופא מומחה",
+    docs: "קבלה + סיכום ביקור + אישור ניהול חשבון / שיק מבוטל",
+    prompt: `אתה עוזר לתביעת ביטוח בריאות בנושא ייעוץ רפואי עם רופא מומחה. דבר בעברית בלבד. אל תשאל על שמות רופאים.
 אנחנו כאן לעזור לך להגיש את תביעתך במהירות ובקלות!
-אל תציין אישור ניהול חשבון יותר מפעם אחת.
-כשהמסמכים הועלו — אמר "תביעה מוכנה לשליחה" ותסכם בקצרה.`
+${COMMON_RULES}
+ 
+תהליך:
+1. בקש שם מלא
+2. אחרי שקיבלת שם — בקש מספר תעודת זהות
+3. אחרי שקיבלת — בקש להעלות: קבלה, סיכום ביקור, ואישור ניהול חשבון או שיק מבוטל
+4. אחרי שהלקוח מאשר שהעלה — שלח את התביעה
+ 
+אחרי אישור — כתוב בדיוק: "✅ התביעה נשלחה!"`
   },
   {
-    id: "alternative",
-    icon: "🌿",
-    title: "רפואה משלימה",
-    sub: "מגוון טיפולים אלטרנטיביים כולל פיזיותרפיה",
-    color: "#059669",
-    bg: "#ecfdf5",
-    docs: ["הפניה לטיפול", "תעודת מטפל מוסמך", "חשבוניות", "אישור ניהול חשבון / שיק מבוטל"],
-    prompt: `אתה עוזר ידידותי של סוכנות ביטוח Kaplan & Dahan לתביעות ביטוח בריאות.
-סוג תביעה: רפואה משלימה — מגוון טיפולים אלטרנטיביים כולל פיזיותרפיה.
-מסמכים נדרשים: הפניה לטיפול, תעודת מטפל מוסמך, חשבוניות, אישור ניהול חשבון או שיק מבוטל.
-אל תשאל איזה סוג טיפול.
-שאל שם מלא, ואז ת.ז בנפרד, ואז בקש את המסמכים.
+    id: "alternative", icon: "🌿", label: "רפואה משלימה ופיזיותרפיה", color: "#22c55e", light: "#dcfce7",
+    sublabel: "טיפולים אלטרנטיביים כולל פיזיותרפיה",
+    docs: "הפניה לטיפול + תעודת מטפל + קבלות + אישור ניהול חשבון / שיק מבוטל",
+    prompt: `אתה עוזר לתביעת ביטוח בריאות בנושא רפואה משלימה ופיזיותרפיה. דבר בעברית בלבד.
 אנחנו כאן לעזור לך להגיש את תביעתך במהירות ובקלות!
-תשלום מועבר אך ורק לחשבון המבוטח עצמו.
-אל תציין אישור ניהול חשבון יותר מפעם אחת.
-כשהמסמכים הועלו — אמר "תביעה מוכנה לשליחה" ותסכם בקצרה.`
+הטיפולים כוללים: פיזיותרפיה, דיקור, כירופרקטיקה, נטורופתיה, רפלקסולוגיה, אוסטאופתיה וטיפולים אלטרנטיביים נוספים.
+${COMMON_RULES}
+ 
+תהליך:
+1. בקש שם מלא
+2. אחרי שקיבלת שם — בקש מספר תעודת זהות
+3. אחרי שקיבלת — בקש להעלות: הפניה לטיפול, תעודת מטפל מוסמך, קבלות, ואישור ניהול חשבון או שיק מבוטל
+4. אחרי שהלקוח מאשר שהעלה — שלח את התביעה
+ 
+חשוב — תשלום יועבר אך ורק לחשבון המבוטח עצמו. לא ניתן להעביר לחשבון אחר.
+ 
+אחרי אישור — כתוב בדיוק: "✅ התביעה נשלחה!"`
   },
   {
-    id: "diagnostic",
-    icon: "🔬",
-    title: "בדיקה אבחנתית",
-    sub: "MRI, CT, בדיקות הריון ועוד",
-    color: "#7c3aed",
-    bg: "#f5f3ff",
-    docs: ["הפניה לבדיקה", "סיכום ביקור רפואי", "חשבונית", "אישור ניהול חשבון / שיק מבוטל"],
-    prompt: `אתה עוזר ידידותי של סוכנות ביטוח Kaplan & Dahan לתביעות ביטוח בריאות.
-סוג תביעה: בדיקה אבחנתית — MRI, CT, בדיקות הריון ועוד.
-מסמכים נדרשים: הפניה לבדיקה, סיכום ביקור רפואי, חשבונית, אישור ניהול חשבון או שיק מבוטל.
-שאל שם מלא, ואז ת.ז בנפרד, ואז בקש את המסמכים.
+    id: "diagnostic", icon: "🔬", label: "בדיקה אבחנתית", color: "#8b5cf6", light: "#ede9fe",
+    sublabel: "MRI, CT, בדיקות הריון ועוד",
+    docs: "הפניה לבדיקה + סיכום ביקור רפואי + קבלה + אישור ניהול חשבון / שיק מבוטל",
+    prompt: `אתה עוזר לתביעת ביטוח בריאות בנושא בדיקה אבחנתית. דבר בעברית בלבד. אל תשאל על שמות רופאים או מרכזים רפואיים.
 אנחנו כאן לעזור לך להגיש את תביעתך במהירות ובקלות!
-אל תציין אישור ניהול חשבון יותר מפעם אחת.
-כשהמסמכים הועלו — אמר "תביעה מוכנה לשליחה" ותסכם בקצרה.`
+הבדיקות כוללות: MRI, CT, אולטרסאונד, בדיקות הריון, בדיקות דם מיוחדות ועוד.
+${COMMON_RULES}
+ 
+תהליך:
+1. בקש שם מלא
+2. אחרי שקיבלת שם — בקש מספר תעודת זהות
+3. אחרי שקיבלת — בקש להעלות: הפניה לבדיקה, סיכום ביקור רפואי, קבלה, ואישור ניהול חשבון או שיק מבוטל
+4. אחרי שהלקוח מאשר שהעלה — שלח את התביעה
+ 
+אחרי אישור — כתוב בדיוק: "✅ התביעה נשלחה!"`
   },
   {
-    id: "surgery",
-    icon: "🏥",
-    title: "ניתוח בארץ",
-    sub: "פוליסות מ-2/2016 בלבד",
-    color: "#dc2626",
-    bg: "#fef2f2",
-    docs: ["הפניה לניתוח", "חשבונית ייעוץ טרום ניתוח", "אישור ניהול חשבון / שיק מבוטל"],
-    prompt: `אתה עוזר ידידותי של סוכנות ביטוח Kaplan & Dahan לתביעות ביטוח בריאות.
-סוג תביעה: ניתוח בארץ.
-חשוב: רק פוליסות מ-02/2016 ואילך. אם הפוליסה לפני כן — הפנה לסוכן בטלפון 03-3731410.
-מסמכים נדרשים: הפניה לניתוח, חשבונית ייעוץ טרום ניתוח, אישור ניהול חשבון או שיק מבוטל.
-שאל מתי נרכשה הפוליסה, ואז שם מלא, ואז ת.ז בנפרד, ואז בקש את המסמכים.
+    id: "surgery", icon: "🏥", label: "ניתוח בארץ", color: "#ef4444", light: "#fee2e2",
+    sublabel: "פוליסות מ-02/2016 בלבד — לפני כן פנה לסוכן",
+    docs: "הפניה לניתוח + קבלה ייעוץ טרום ניתוח + אישור ניהול חשבון / שיק מבוטל",
+    prompt: `אתה עוזר לתביעת ביטוח בריאות בנושא ניתוח בארץ. דבר בעברית בלבד. היה חם וסבלני. אל תשאל על שמות רופאים או בתי חולים.
 אנחנו כאן לעזור לך להגיש את תביעתך במהירות ובקלות!
-אל תציין אישור ניהול חשבון יותר מפעם אחת.
-כשהמסמכים הועלו — אמר "תביעה מוכנה לשליחה" ותסכם בקצרה.`
+אנחנו כאן לעזור לך להגיש את תביעתך במהירות ובקלות!
+${COMMON_RULES}
+ 
+חשוב מאוד — תנאי פוליסה:
+כיסוי ניתוחים בארץ קיים רק בפוליסות שנרכשו החל מ-02/2016.
+בתחילת השיחה שאל את הלקוח מתי נרכשה הפוליסה שלו.
+- אם הפוליסה מ-02/2016 ואילך — המשך בתביעה
+- אם הפוליסה לפני 02/2016 — הסבר בנימוס שיש לפנות ישירות לסוכן הביטוח בטלפון 03-3731410
+ 
+תהליך:
+1. בקש שם מלא
+2. אחרי שקיבלת שם — בקש מספר תעודת זהות
+2. שאל מתי נרכשה הפוליסה — לפני או אחרי 02/2016
+3. אם הפוליסה מתאימה — בקש להעלות:
+   - הפניה לניתוח (חובה)
+   - קבלה ייעוץ טרום ניתוח (חובה)
+   - אישור ניהול חשבון או שיק מבוטל (חובה)
+5. אחרי שהלקוח מאשר שהעלה — שלח את התביעה
+ 
+אחרי אישור — כתוב בדיוק: "✅ התביעה נשלחה!"`
   },
   {
-    id: "child",
-    icon: "👶",
-    title: "התפתחות הילד",
-    sub: "פסיכולוג, קלינאי, ריפוי בעיסוק, שחייה/רכיבה טיפולית ועוד...",
-    color: "#d97706",
-    bg: "#fffbeb",
-    docs: ["הפניה ממומחה התפתחות הילד (ותק 3 שנים+) או נוירולוג ילדים", "חשבוניות", "אישור ניהול חשבון / שיק מבוטל"],
-    prompt: `אתה עוזר ידידותי של סוכנות ביטוח Kaplan & Dahan לתביעות ביטוח בריאות.
-סוג תביעה: התפתחות הילד — פסיכולוג, קלינאי תקשורת, ריפוי בעיסוק, שחייה טיפולית, רכיבה טיפולית.
-חובה: הפניה ממומחה התפתחות הילד עם ותק לפחות 3 שנים, או מנוירולוג ילדים בלבד. הפניה מרופא אחר — הפנה לסוכן 03-3731410.
-מסמכים נדרשים: הפניה מהרופא המוסמך, חשבוניות, אישור ניהול חשבון או שיק מבוטל.
-שאל שם מלא, ואז ת.ז בנפרד, ואז בקש את המסמכים.
+    id: "child", icon: "👶", label: "התפתחות הילד", color: "#f59e0b", light: "#fef3c7",
+    sublabel: "פסיכולוג, קלינאי, ריפוי בעיסוק, שחייה/רכיבה טיפולית ועוד...",
+    docs: "הפניה מרופא מומחה + קבלות + אישור ניהול חשבון / שיק מבוטל",
+    prompt: `אתה עוזר לתביעת ביטוח בריאות בנושא התפתחות הילד. דבר בעברית בלבד. היה חם ומסביר פנים.
 אנחנו כאן לעזור לך להגיש את תביעתך במהירות ובקלות!
-אל תציין אישור ניהול חשבון יותר מפעם אחת.
-כשהמסמכים הועלו — אמר "תביעה מוכנה לשליחה" ותסכם בקצרה.`
+הטיפולים כוללים: פסיכולוג, קלינאי תקשורת, ריפוי בעיסוק, שחייה טיפולית, רכיבה טיפולית על סוסים, ייעוצים התפתחותיים שונים.
+${COMMON_RULES}
+ 
+חשוב מאוד — תנאי חובה להפניה:
+ההפניה חייבת להיות מאחד מאלה בלבד:
+- רופא מומחה לילדים עם ותק של לפחות 3 שנים בתחום התפתחות הילד
+- נוירולוג ילדים
+ 
+אם הלקוח מציין שההפניה היא מרופא אחר (רופא משפחה, רופא ילדים רגיל ללא התמחות בהתפתחות) — הסבר בנימוס שהתביעה מחייבת הפניה ממומחה התפתחות הילד (ותק 3 שנים לפחות) או נוירולוג ילדים בלבד, ויש לפנות לסוכן לבירור בטלפון 03-3731410.
+ 
+תהליך:
+1. בקש שם מלא
+2. אחרי שקיבלת שם — בקש מספר תעודת זהות
+3. אחרי שקיבלת — בקש להעלות: הפניה ממומחה התפתחות הילד או נוירולוג ילדים, קבלות, ואישור ניהול חשבון או שיק מבוטל
+4. אחרי שהלקוח מאשר שהעלה — שלח את התביעה
+ 
+אחרי אישור — כתוב בדיוק: "✅ התביעה נשלחה!"`
   },
   {
-    id: "accident",
-    icon: "🚑",
-    title: "תאונות אישיות — שברים",
-    sub: "שברים בלבד — כל דבר אחר לפנות לסוכן",
-    color: "#0891b2",
-    bg: "#ecfeff",
-    docs: ["דו\"ח רפואי המציין שבר", "אישור ניהול חשבון / שיק מבוטל"],
-    prompt: `אתה עוזר ידידותי של סוכנות ביטוח Kaplan & Dahan לתביעות ביטוח בריאות.
-סוג תביעה: תאונות אישיות — שברים בלבד.
-אם הפציעה אינה שבר — הפנה לסוכן בטלפון 03-3731410.
-מסמכים נדרשים: דו"ח רפואי המציין במפורש שקיים שבר, אישור ניהול חשבון או שיק מבוטל.
-שאל שם מלא, ואז ת.ז בנפרד, ואז בקש את המסמכים.
-אנחנו כאן לעזור לך להגיש את תביעתך במהירות ובקלות!
-אל תציין אישור ניהול חשבון יותר מפעם אחת.
-כשהמסמכים הועלו — אמר "תביעה מוכנה לשליחה" ותסכם בקצרה.`
-  }
+    id: "accident", icon: "🚑", label: "תאונות אישיות — שברים", color: "#db2777", light: "#fce7f3",
+    sublabel: "שברים בלבד — לכל דבר אחר פנה לסוכן",
+    docs: "דו\"ח רפואי המציין שבר + אישור ניהול חשבון / שיק מבוטל",
+    prompt: `אתה עוזר לתביעת ביטוח בנושא תאונות אישיות — שברים בלבד. דבר בעברית בלבד. היה חם ואמפתי.
+${COMMON_RULES}
+ 
+חשוב מאוד: קטגוריה זו מיועדת לשברים בלבד. אם הלקוח מתאר פציעה שאינה שבר (חתכים, חבלות, נקעים, כוויות וכו') — הסבר בנימוס שעליו לפנות ישירות לסוכן בטלפון 03-3731410 לטיפול בתביעה.
+ 
+תהליך (לשברים בלבד):
+1. בקש שם מלא
+2. אחרי שקיבלת שם — בקש מספר תעודת זהות
+3. וודא שמדובר בשבר — אם לא, הפנה לסוכן
+4. בקש להעלות: דו"ח רפואי המציין במפורש שקיים שבר, ואישור ניהול חשבון או שיק מבוטל
+5. אחרי שהלקוח מאשר שהעלה — שלח את התביעה
+ 
+אחרי אישור — כתוב בדיוק: "✅ התביעה נשלחה!"`
+  },
 ];
  
-function App() {
-  const [screen, setScreen] = React.useState("home");
-  const [selectedType, setSelectedType] = React.useState(null);
-  const [messages, setMessages] = React.useState([]);
-  const [input, setInput] = React.useState("");
-  const [loading, setLoading] = React.useState(false);
-  const [uploadedFiles, setUploadedFiles] = React.useState([]);
-  const [submitted, setSubmitted] = React.useState(false);
-  const [emailSending, setEmailSending] = React.useState(false);
-  const messagesEndRef = React.useRef(null);
-  const fileInputRef = React.useRef(null);
+const TypingDots = ({ color }) => (
+  <div style={{ display: "flex", gap: 5, padding: "8px 4px", alignItems: "center" }}>
+    {[0,1,2].map(i => (
+      <div key={i} style={{ width: 8, height: 8, borderRadius: "50%", background: color,
+        animation: "bounce 1.2s infinite", animationDelay: `${i*0.2}s` }} />
+    ))}
+  </div>
+);
  
-  React.useEffect(() => {
-    if (messagesEndRef.current) messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+export default function InsuranceChatbot() {
+  const [selectedType, setSelectedType] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [files, setFiles] = useState([]);
+  const [submitted, setSubmitted] = useState(false);
+  const [history, setHistory] = useState([]);
+  const bottomRef = useRef(null);
+  const fileRef = useRef(null);
  
-  function startChat(type) {
+  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages, loading]);
+ 
+  const reset = () => { setSelectedType(null); setMessages([]); setHistory([]); setSubmitted(false); setFiles([]); setInput(""); };
+ 
+  const startChat = (type) => {
     setSelectedType(type);
-    setUploadedFiles([]);
+    setMessages([{ role: "assistant", content:
+      `היי! 👋 אני הרובוט החכם של סוכנות Kaplan & Dahan 🤖\nאני כאן לעזור לך להגיש את תביעתך במהירות ובקלות!\n\nתצטרך:\n• ${type.docs}\n\nנתחיל — מה שמך המלא?`
+    }]);
+    setHistory([]);
     setSubmitted(false);
-    const welcome = `היי! 👋 אני הרובוט החכם של סוכנות Kaplan & Dahan 🤖 אנחנו כאן לעזור לך להגיש את תביעתך במהירות ובקלות!\n\nלתביעת **${type.title}** תצטרך להכין:\n${type.docs.map(d => `• ${d}`).join("\n")}\n\nנתחיל — מה שמך המלא?`;
-    setMessages([{ role: "assistant", content: welcome }]);
-    setScreen("chat");
-  }
+    setFiles([]);
+  };
  
-  async function sendMessage() {
-    if (!input.trim() && uploadedFiles.length === 0) return;
-    const userText = input.trim();
-    setInput("");
-    const newMessages = [...messages, { role: "user", content: userText || "העלאתי מסמכים" }];
-    setMessages(newMessages);
-    setLoading(true);
+  const sendMessage = async (text) => {
+    if (!text.trim() && files.length === 0) return;
+    if (submitted || !selectedType) return;
+ 
+    const fileNote = files.length > 0 ? `\n[הועלו ${files.length} קבצים: ${files.map(f=>f.name).join(", ")}]` : "";
+    const userMsg = { role: "user", content: text, files: [...files] };
+    const newHistory = [...history, { role: "user", content: text + fileNote }];
+ 
+    setMessages(p => [...p, userMsg]);
+    setInput(""); setFiles([]); setLoading(true);
  
     try {
-      const apiMessages = newMessages.map(m => ({ role: m.role, content: m.content }));
-      const res = await fetch(API_URL, {
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: "claude-sonnet-4-5",
+          model: "claude-sonnet-4-20250514",
           max_tokens: 1000,
           system: selectedType.prompt,
-          messages: apiMessages
+          messages: newHistory
         })
       });
       const data = await res.json();
       const reply = data.content?.[0]?.text || "מצטער, הייתה שגיאה. נסה שוב.";
-      const updatedMessages = [...newMessages, { role: "assistant", content: reply }];
-      setMessages(updatedMessages);
+      setMessages(p => [...p, { role: "assistant", content: reply }]);
+      setHistory([...newHistory, { role: "assistant", content: reply }]);
+      if (reply.includes("✅ התביעה נשלחה")) setSubmitted(true);
+    } catch {
+      setMessages(p => [...p, { role: "assistant", content: "אופס! בעיית חיבור. נסה שוב 🙏" }]);
+    } finally { setLoading(false); }
+  };
  
-      // אם הבוט אומר שהתביעה מוכנה לשליחה — שלח אימייל
-      if (reply.includes("תביעה מוכנה לשליחה") && !submitted) {
-        setSubmitted(true);
-        setTimeout(() => sendEmailSummary(updatedMessages), 500);
-      }
-    } catch (e) {
-      setMessages(prev => [...prev, { role: "assistant", content: "מצטער, הייתה שגיאה בחיבור. נסה שוב." }]);
-    }
-    setLoading(false);
-  }
+  const ct = selectedType;
+  const accent = ct?.color || "#1e293b";
+  const light = ct?.light || "#f1f5f9";
  
-  async function sendEmailSummary(msgs) {
-    setEmailSending(true);
-    const conversation = msgs
-      .map(m => `${m.role === "user" ? "לקוח" : "בוט"}: ${m.content}`)
-      .join("\n\n");
-    const filesList = uploadedFiles.length > 0
-      ? uploadedFiles.map(f => f.name).join(", ")
-      : "לא הועלו קבצים";
+  return (
+    <>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800&display=swap');
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{font-family:'Heebo',sans-serif;direction:rtl;background:#f1f5f9}
+        @keyframes bounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-6px)}}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes popIn{from{opacity:0;transform:scale(0.92)}to{opacity:1;transform:scale(1)}}
+        textarea{font-family:'Heebo',sans-serif;direction:rtl}
+        ::-webkit-scrollbar{width:4px}
+        ::-webkit-scrollbar-thumb{border-radius:10px;background:#cbd5e1}
+        .tbtn{transition:all 0.18s!important;cursor:pointer}
+        .tbtn:hover{transform:translateY(-2px)!important;box-shadow:0 8px 24px rgba(0,0,0,0.13)!important}
+      `}</style>
  
-    try {
-      await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
-        claim_type: selectedType.title,
-        conversation: conversation,
-        files_list: filesList,
-        to_email: "tviot@kd-ins.co.il"
-      });
-      setMessages(prev => [...prev, {
-        role: "assistant",
-        content: "🎉 התביעה הוגשה בהצלחה! ✅\n\nהמסמכים התקבלו ועברו לבדיקה.\nנעדכן אותך בהתקדמות התביעה בהקדם 😊\n\nלבירורים: 📞 03-3731410"
-      }]);
-    } catch (err) {
-      setMessages(prev => [...prev, {
-        role: "assistant",
-        content: "🎉 התביעה הוגשה!\n\nנעדכן אותך בקרוב. לבירורים: 📞 03-3731410"
-      }]);
-    }
-    setEmailSending(false);
-  }
+      <div style={{ minHeight:"100vh", background:"linear-gradient(160deg,#f8fafc,#e2e8f0)",
+        display:"flex", alignItems:"center", justifyContent:"center", padding:12 }}>
+        <div style={{ width:"100%", maxWidth:660, borderRadius:24, overflow:"hidden",
+          boxShadow:"0 20px 60px rgba(0,0,0,0.13)", display:"flex", flexDirection:"column" }}>
  
-  function handleFileUpload(e) {
-    const files = Array.from(e.target.files);
-    setUploadedFiles(prev => [...prev, ...files]);
-    const names = files.map(f => f.name).join(", ");
-    const newMessages = [...messages, {
-      role: "user",
-      content: `העלאתי את הקבצים הבאים: ${names}`
-    }];
-    setMessages(newMessages);
-    setLoading(true);
- 
-    fetch(API_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-5",
-        max_tokens: 1000,
-        system: selectedType.prompt,
-        messages: newMessages.map(m => ({ role: m.role, content: m.content }))
-      })
-    })
-      .then(r => r.json())
-      .then(data => {
-        const reply = data.content?.[0]?.text || "קיבלתי את הקבצים!";
-        const updatedMessages = [...newMessages, { role: "assistant", content: reply }];
-        setMessages(updatedMessages);
-        if (reply.includes("תביעה מוכנה לשליחה") && !submitted) {
-          setSubmitted(true);
-          setTimeout(() => sendEmailSummary(updatedMessages), 500);
-        }
-      })
-      .catch(() => setMessages(prev => [...prev, { role: "assistant", content: "קיבלתי את הקבצים ✅" }]))
-      .finally(() => setLoading(false));
-  }
- 
-  function renderMessage(msg, i) {
-    const isBot = msg.role === "assistant";
-    return (
-      <div key={i} style={{
-        display: "flex",
-        justifyContent: isBot ? "flex-start" : "flex-end",
-        marginBottom: 12
-      }}>
-        <div style={{
-          maxWidth: "80%",
-          background: isBot ? "#fff" : selectedType?.color || "#2563eb",
-          color: isBot ? "#1e293b" : "#fff",
-          borderRadius: isBot ? "4px 18px 18px 18px" : "18px 4px 18px 18px",
-          padding: "10px 14px",
-          fontSize: 14,
-          lineHeight: 1.6,
-          boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
-          whiteSpace: "pre-wrap"
-        }}>
-          {msg.content.replace(/\*\*(.*?)\*\*/g, '$1')}
-        </div>
-      </div>
-    );
-  }
- 
-  // מסך בית
-  if (screen === "home") {
-    return (
-      <div style={{ background: "#fff", borderRadius: 20, overflow: "hidden", boxShadow: "0 8px 32px rgba(0,0,0,0.12)" }}>
-        {/* Header */}
-        <div style={{ background: "#1a3a5c", padding: "20px 24px", textAlign: "center" }}>
-          <div style={{ fontSize: 22, fontWeight: 700, color: "#fff", letterSpacing: 1 }}>KD</div>
-          <div style={{ color: "#94a3b8", fontSize: 13, marginTop: 2 }}>Kaplan & Dahan</div>
-          <div style={{ color: "#e2e8f0", fontSize: 15, marginTop: 8, fontWeight: 600 }}>הגשת תביעת ביטוח בריאות</div>
-        </div>
- 
-        {/* Grid */}
-        <div style={{ padding: 16 }}>
-          <div style={{ fontSize: 13, color: "#64748b", textAlign: "center", marginBottom: 14 }}>
-            בחר את סוג התביעה:
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-            {CLAIM_TYPES.map(type => (
-              <button key={type.id} onClick={() => startChat(type)} style={{
-                background: type.bg,
-                border: `2px solid ${type.color}20`,
-                borderRadius: 14,
-                padding: "14px 10px",
-                cursor: "pointer",
-                textAlign: "right",
-                transition: "all 0.2s"
-              }}
-              onMouseEnter={e => e.currentTarget.style.transform = "scale(1.02)"}
-              onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
-              >
-                <div style={{ fontSize: 24 }}>{type.icon}</div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: type.color, marginTop: 6, lineHeight: 1.3 }}>{type.title}</div>
-                <div style={{ fontSize: 11, color: "#64748b", marginTop: 4, lineHeight: 1.4 }}>{type.sub}</div>
-              </button>
-            ))}
-          </div>
- 
-          {/* Phone */}
-          <div style={{
-            marginTop: 16,
-            background: "#f0fdf4",
-            border: "1px solid #bbf7d0",
-            borderRadius: 12,
-            padding: "12px 16px",
-            textAlign: "center"
-          }}>
-            <div style={{ fontSize: 13, color: "#166534" }}>מעדיפים לדבר עם נציג?</div>
-            <a href="tel:0337314101" style={{ fontSize: 16, fontWeight: 700, color: "#16a34a", textDecoration: "none" }}>
+          {/* Logo bar */}
+          <div style={{ background:"#fff", padding:"12px 20px", borderBottom:"1px solid #f1f5f9",
+            display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+            <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+              <div style={{ width:40, height:40, borderRadius:10, background:"#1e293b",
+                display:"flex", alignItems:"center", justifyContent:"center", color:"#fff", fontSize:18, fontWeight:800 }}>KD</div>
+              <div>
+                <div style={{ fontSize:14, fontWeight:800, color:"#1e293b" }}>KAPLAN & DAHAN</div>
+                <div style={{ fontSize:11, color:"#94a3b8" }}>פירמת ביטוח ופיננסים</div>
+              </div>
+            </div>
+            <a href="tel:03-3731410" style={{ display:"flex", alignItems:"center", gap:6,
+              background: ct ? accent : "#1e293b", color:"#fff", borderRadius:20,
+              padding:"7px 14px", textDecoration:"none", fontSize:13, fontWeight:700,
+              fontFamily:"'Heebo',sans-serif", transition:"background 0.3s" }}>
               📞 03-3731410
             </a>
           </div>
-        </div>
-      </div>
-    );
-  }
  
-  // מסך צ'אט
-  return (
-    <div style={{ background: "#fff", borderRadius: 20, overflow: "hidden", boxShadow: "0 8px 32px rgba(0,0,0,0.12)", display: "flex", flexDirection: "column", height: "85vh", maxHeight: 680 }}>
-      {/* Header */}
-      <div style={{ background: selectedType.color, padding: "14px 16px", display: "flex", alignItems: "center", gap: 10 }}>
-        <button onClick={() => setScreen("home")} style={{ background: "rgba(255,255,255,0.2)", border: "none", color: "#fff", borderRadius: 8, padding: "4px 10px", cursor: "pointer", fontSize: 14 }}>
-          ←
-        </button>
-        <span style={{ fontSize: 20 }}>{selectedType.icon}</span>
-        <div>
-          <div style={{ color: "#fff", fontWeight: 700, fontSize: 15 }}>{selectedType.title}</div>
-          <div style={{ color: "rgba(255,255,255,0.8)", fontSize: 11 }}>Kaplan & Dahan</div>
-        </div>
-        <div style={{ marginRight: "auto" }}>
-          <a href="tel:0337314101" style={{ color: "rgba(255,255,255,0.9)", textDecoration: "none", fontSize: 13 }}>📞 03-3731410</a>
-        </div>
-      </div>
- 
-      {/* Messages */}
-      <div style={{ flex: 1, overflowY: "auto", padding: "16px", background: "#f8fafc" }}>
-        {messages.map(renderMessage)}
-        {loading && (
-          <div style={{ display: "flex", justifyContent: "flex-start", marginBottom: 12 }}>
-            <div style={{ background: "#fff", borderRadius: "4px 18px 18px 18px", padding: "10px 16px", boxShadow: "0 1px 4px rgba(0,0,0,0.08)" }}>
-              <span style={{ fontSize: 18 }}>⋯</span>
+          {/* Sub-header */}
+          <div style={{ background: ct ? accent : "#1e293b", padding:"11px 20px",
+            display:"flex", alignItems:"center", justifyContent:"space-between", transition:"background 0.4s" }}>
+            <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+              <div style={{ width:34, height:34, borderRadius:"50%", background:"rgba(255,255,255,0.2)",
+                display:"flex", alignItems:"center", justifyContent:"center", fontSize:18 }}>
+                {ct ? ct.icon : "🏥"}
+              </div>
+              <div>
+                <div style={{ color:"#fff", fontWeight:700, fontSize:14 }}>
+                  {ct ? `תביעת ${ct.label}` : "מערכת תביעות ביטוח בריאות"}
+                </div>
+                <div style={{ color:"rgba(255,255,255,0.7)", fontSize:11.5 }}>
+                  {loading ? "✍️ מקליד..." : ct ? "🟢 פעיל" : "בחר סוג תביעה להתחלה"}
+                </div>
+              </div>
             </div>
+            {ct && (
+              <button onClick={reset} style={{ background:"rgba(255,255,255,0.18)", border:"none",
+                color:"#fff", borderRadius:20, padding:"5px 13px", cursor:"pointer",
+                fontSize:12, fontFamily:"'Heebo',sans-serif" }}>← חזור</button>
+            )}
           </div>
-        )}
-        {emailSending && (
-          <div style={{ textAlign: "center", color: "#64748b", fontSize: 13, marginBottom: 8 }}>
-            שולח אימייל... 📧
-          </div>
-        )}
-        <div ref={messagesEndRef} />
-      </div>
  
-      {/* Uploaded files chips */}
-      {uploadedFiles.length > 0 && (
-        <div style={{ padding: "8px 16px", background: "#f0fdf4", display: "flex", flexWrap: "wrap", gap: 6 }}>
-          {uploadedFiles.map((f, i) => (
-            <span key={i} style={{
-              background: "#dcfce7",
-              color: "#166534",
-              border: "1px solid #bbf7d0",
-              borderRadius: 20,
-              padding: "2px 10px",
-              fontSize: 12
-            }}>
-              ✅ {f.name}
-            </span>
-          ))}
+          {/* Content */}
+          {!ct ? (
+            <div style={{ background:"#fff", padding:"24px 20px" }}>
+              <div style={{ textAlign:"center", marginBottom:22 }}>
+                <div style={{ fontSize:20, fontWeight:800, color:"#1e293b", marginBottom:4 }}>
+                  איזה סוג תביעה תרצה להגיש?
+                </div>
+                <div style={{ fontSize:13.5, color:"#64748b" }}>בחר קטגוריה ונתחיל</div>
+              </div>
+ 
+              <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+                {CLAIM_TYPES.map((type, i) => (
+                  <button key={type.id} className="tbtn" onClick={() => startChat(type)}
+                    style={{ display:"flex", alignItems:"center", gap:14, padding:"15px 18px",
+                      background:"#fff", border:"2px solid #f1f5f9", borderRadius:14,
+                      textAlign:"right", width:"100%",
+                      animation:`fadeUp 0.28s ease ${i*0.06}s both`,
+                      boxShadow:"0 2px 8px rgba(0,0,0,0.05)" }}>
+                    <div style={{ width:48, height:48, borderRadius:12, flexShrink:0,
+                      background:type.light, display:"flex", alignItems:"center", justifyContent:"center", fontSize:24 }}>
+                      {type.icon}
+                    </div>
+                    <div style={{ flex:1 }}>
+                      <div style={{ fontSize:15, fontWeight:700, color:"#1e293b", marginBottom:2 }}>{type.label}</div>
+                      {type.sublabel && <div style={{ fontSize:11.5, color:type.color, fontWeight:600, marginBottom:2 }}>{type.sublabel}</div>}
+                      <div style={{ fontSize:11, color:"#94a3b8" }}>📎 {type.docs}</div>
+                    </div>
+                    <div style={{ width:30, height:30, borderRadius:"50%", background:type.light,
+                      display:"flex", alignItems:"center", justifyContent:"center", color:type.color, fontSize:16 }}>←</div>
+                  </button>
+                ))}
+              </div>
+ 
+              <div style={{ marginTop:16, padding:"10px 16px", background:"#f8fafc",
+                borderRadius:10, fontSize:12, color:"#94a3b8", textAlign:"center" }}>
+                🔒 המידע שלך מאובטח · tviot@kd-ins.co.il
+              </div>
+ 
+              <a href="tel:03-3731410" style={{ marginTop:10, display:"flex", alignItems:"center",
+                justifyContent:"center", gap:10, padding:"13px 20px", borderRadius:12,
+                textDecoration:"none", background:"#f0fdf4", border:"2px solid #bbf7d0",
+                color:"#15803d", fontFamily:"'Heebo',sans-serif" }}>
+                <span style={{ fontSize:20 }}>📞</span>
+                <div style={{ textAlign:"center" }}>
+                  <div style={{ fontSize:13 }}>מעדיפים לדבר עם נציג?</div>
+                  <div style={{ fontSize:17, fontWeight:800 }}>03-3731410</div>
+                </div>
+              </a>
+            </div>
+          ) : (
+            <>
+              {/* Messages */}
+              <div style={{ background:"#f8fafc", padding:"18px 16px 10px",
+                overflowY:"auto", minHeight:360, maxHeight:460,
+                display:"flex", flexDirection:"column", gap:12 }}>
+ 
+                {messages.map((m, i) => (
+                  <div key={i} style={{ display:"flex",
+                    flexDirection: m.role==="user" ? "row" : "row-reverse",
+                    alignItems:"flex-end", gap:8, animation:"popIn 0.22s ease" }}>
+                    <div style={{ width:32, height:32, borderRadius:"50%", flexShrink:0,
+                      background: m.role==="user" ? "#e2e8f0" : light,
+                      display:"flex", alignItems:"center", justifyContent:"center", fontSize:16 }}>
+                      {m.role==="user" ? "🧑" : ct.icon}
+                    </div>
+                    <div style={{ maxWidth:"75%" }}>
+                      <div style={{ padding:"10px 14px",
+                        borderRadius: m.role==="user" ? "18px 18px 18px 4px" : "18px 18px 4px 18px",
+                        background: m.role==="user" ? "#fff" : accent,
+                        color: m.role==="user" ? "#1e293b" : "#fff",
+                        fontSize:14, lineHeight:1.7, whiteSpace:"pre-wrap", wordBreak:"break-word",
+                        boxShadow:"0 2px 8px rgba(0,0,0,0.06)",
+                        border: m.role==="user" ? "1px solid #e2e8f0" : "none" }}>
+                        {m.content}
+                      </div>
+                      {m.files?.length > 0 && (
+                        <div style={{ display:"flex", flexWrap:"wrap", gap:4, marginTop:4 }}>
+                          {m.files.map((f,fi) => (
+                            <div key={fi} style={{ background:light, borderRadius:20,
+                              padding:"2px 10px", fontSize:11.5, color:accent }}>📎 {f.name}</div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+ 
+                {loading && (
+                  <div style={{ display:"flex", flexDirection:"row-reverse", alignItems:"flex-end", gap:8 }}>
+                    <div style={{ width:32, height:32, borderRadius:"50%", background:light,
+                      display:"flex", alignItems:"center", justifyContent:"center", fontSize:16 }}>{ct.icon}</div>
+                    <div style={{ padding:"4px 14px", borderRadius:"18px 18px 4px 18px",
+                      background:accent, boxShadow:"0 2px 8px rgba(0,0,0,0.07)" }}>
+                      <TypingDots color="#fff" />
+                    </div>
+                  </div>
+                )}
+ 
+                {submitted && (
+                  <div style={{ textAlign:"center", padding:"20px", background:"#f0fdf4",
+                    border:"2px solid #86efac", borderRadius:16, animation:"popIn 0.4s ease" }}>
+                    <div style={{ fontSize:38, marginBottom:6 }}>🎉</div>
+                    <div style={{ fontWeight:800, color:"#15803d", fontSize:17 }}>התביעה הוגשה בהצלחה!</div>
+                    <div style={{ color:"#16a34a", fontSize:14, marginTop:8, lineHeight:1.7 }}>
+                      ✅ המסמכים התקבלו ועברו לבדיקה<br/>
+                      נעדכן אותך בהתקדמות התביעה בהקדם 😊
+                    </div>
+                    <div style={{ color:"#94a3b8", fontSize:12, marginTop:6 }}>לבירורים: 03-3731410</div>
+                    <button onClick={reset} style={{ marginTop:12, background:"#22c55e", color:"#fff",
+                      border:"none", borderRadius:20, padding:"8px 20px", fontSize:13,
+                      cursor:"pointer", fontFamily:"'Heebo',sans-serif", fontWeight:700 }}>
+                      הגש תביעה נוספת ←
+                    </button>
+                  </div>
+                )}
+                <div ref={bottomRef} />
+              </div>
+ 
+              {/* Files preview */}
+              {files.length > 0 && (
+                <div style={{ background:"#fff", borderTop:`1px solid ${light}`,
+                  padding:"7px 14px", display:"flex", flexWrap:"wrap", gap:6 }}>
+                  {files.map((f,i) => (
+                    <div key={i} style={{ background:light, borderRadius:20, padding:"3px 10px 3px 12px",
+                      fontSize:12, color:accent, display:"flex", alignItems:"center", gap:5 }}>
+                      📎 {f.name.length > 20 ? f.name.slice(0,18)+"…" : f.name}
+                      <button onClick={() => setFiles(p => p.filter((_,x)=>x!==i))}
+                        style={{ background:"none", border:"none", cursor:"pointer",
+                          color:accent, fontSize:15, padding:0, lineHeight:1 }}>×</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+ 
+              {/* Input */}
+              <div style={{ background:"#fff", borderTop:"1px solid #f1f5f9",
+                padding:"12px 14px", display:"flex", gap:8, alignItems:"flex-end" }}>
+                <input ref={fileRef} type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                  onChange={e => { setFiles(p=>[...p,...Array.from(e.target.files)]); e.target.value=""; }}
+                  style={{ display:"none" }} />
+ 
+                <button onClick={() => fileRef.current?.click()} disabled={submitted}
+                  style={{ width:42, height:42, borderRadius:"50%",
+                    border:`2px solid ${files.length>0 ? accent : "#e2e8f0"}`,
+                    background: files.length>0 ? light : "#f8fafc",
+                    cursor: submitted ? "not-allowed" : "pointer",
+                    fontSize: files.length>0 ? 12 : 19,
+                    display:"flex", alignItems:"center", justifyContent:"center",
+                    color:accent, flexShrink:0, transition:"all 0.2s" }}>
+                  {files.length>0 ? `${files.length}📎` : "📎"}
+                </button>
+ 
+                <textarea value={input}
+                  onChange={e => setInput(e.target.value)}
+                  onKeyDown={e => { if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendMessage(input);} }}
+                  placeholder="כתוב כאן... (Enter לשליחה)"
+                  rows={1} disabled={loading||submitted}
+                  style={{ flex:1, border:"2px solid #e2e8f0", borderRadius:14,
+                    padding:"10px 13px", fontSize:14, outline:"none", resize:"none",
+                    lineHeight:1.6, background:"#f8fafc", maxHeight:100, overflowY:"auto",
+                    opacity: submitted ? 0.5 : 1, transition:"border-color 0.2s" }}
+                  onFocus={e => e.target.style.borderColor=accent}
+                  onBlur={e => e.target.style.borderColor="#e2e8f0"} />
+ 
+                <button onClick={() => sendMessage(input)}
+                  disabled={(!input.trim()&&files.length===0)||loading||submitted}
+                  style={{ width:42, height:42, borderRadius:"50%", border:"none",
+                    background: (!input.trim()&&files.length===0)||loading||submitted ? "#e2e8f0" : accent,
+                    color: (!input.trim()&&files.length===0)||loading||submitted ? "#94a3b8" : "#fff",
+                    cursor: (!input.trim()&&files.length===0)||loading||submitted ? "not-allowed" : "pointer",
+                    fontSize:17, display:"flex", alignItems:"center", justifyContent:"center",
+                    flexShrink:0, transition:"all 0.2s" }}>
+                  ➤
+                </button>
+              </div>
+ 
+              <div style={{ background:"#f8fafc", padding:"6px 14px",
+                fontSize:11, color:"#94a3b8", textAlign:"center", borderTop:"1px solid #f1f5f9" }}>
+                🔒 מאובטח · PDF, תמונות ו-Word מתקבלים
+              </div>
+            </>
+          )}
         </div>
-      )}
- 
-      {/* Input */}
-      <div style={{ padding: "12px 16px", background: "#fff", borderTop: "1px solid #e2e8f0", display: "flex", gap: 8 }}>
-        <input
-          type="file"
-          ref={fileInputRef}
-          onChange={handleFileUpload}
-          multiple
-          accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-          style={{ display: "none" }}
-        />
-        <button onClick={() => fileInputRef.current.click()} style={{
-          background: "#f1f5f9",
-          border: "none",
-          borderRadius: 12,
-          padding: "0 14px",
-          cursor: "pointer",
-          fontSize: 18
-        }}>
-          📎
-        </button>
-        <input
-          value={input}
-          onChange={e => setInput(e.target.value)}
-          onKeyDown={e => e.key === "Enter" && !e.shiftKey && sendMessage()}
-          placeholder="כתוב הודעה..."
-          style={{
-            flex: 1,
-            border: "1px solid #e2e8f0",
-            borderRadius: 12,
-            padding: "10px 14px",
-            fontSize: 14,
-            outline: "none",
-            fontFamily: "inherit",
-            direction: "rtl"
-          }}
-        />
-        <button onClick={sendMessage} disabled={loading} style={{
-          background: selectedType.color,
-          border: "none",
-          borderRadius: 12,
-          padding: "0 16px",
-          color: "#fff",
-          cursor: "pointer",
-          fontSize: 18,
-          opacity: loading ? 0.6 : 1
-        }}>
-          ➤
-        </button>
       </div>
-    </div>
+    </>
   );
 }
- 
-ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(App));
-</script>
-</body>
-</html>
  
