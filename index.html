@@ -33,7 +33,7 @@
   <script type="text/babel">
     const { useState, useRef, useEffect } = React;
  
-    const COMMON_RULES = "חוקים חשובים:\n- אל תחזור על פרטים שהלקוח כבר נתן\n- שאל שאלה אחת בכל פעם בלבד\n- אישור ניהול חשבון בנק או שיק מבוטל — יוזכר פעם אחת בלבד\n- אל תדרוש מסמכים בשיחה — המסמכים מועלים דרך הכפתורים במסך. רק בקש מהלקוח ללחוץ על כפתור העלאת מסמכים שמופיע במסך";
+    const COMMON_RULES = "חוקים חשובים:\n- שאל שאלה אחת בכל פעם בלבד\n- אל תחזור על פרטים שהלקוח כבר נתן\n- אל תדרוש מסמכים בשיחה — המסמכים מועלים דרך כפתורי ההעלאה במסך\n- אישור ניהול חשבון בנק או שיק מבוטל — יוזכר פעם אחת בלבד";
  
     const CLAIM_DOCS = {
       consultation: ["קבלה", "סיכום ביקור", "אישור ניהול חשבון / שיק מבוטל"],
@@ -53,198 +53,43 @@
     };
  
     const CLAIM_TYPES = [
-      { id:"consultation", icon:"🩺", label:"ייעוץ רפואי מומחה", color:"#0ea5e9", light:"#e0f2fe",
-        sublabel:"ייעוץ עם רופא מומחה",
-        docs:"קבלה + סיכום ביקור + אישור ניהול חשבון / שיק מבוטל",
-        prompt:"אתה עוזר לתביעת ביטוח בריאות בנושא ייעוץ רפואי עם רופא מומחה. דבר בעברית בלבד. אל תשאל על שמות רופאים.\nאנחנו כאן לעזור לך להגיש את תביעתך במהירות ובקלות!\n"+COMMON_RULES+"\nתהליך:\n1. בקש שם מלא\n2. אחרי שקיבלת שם — בקש את מספר תעודת הזהות של המבוטח שעבורו מוגשת התביעה\n3. הפנה ללחוץ על כפתור העלאת מסמכים שמופיע במסך\n4. אחרי אישור — כתוב בדיוק: \"✅ התביעה נשלחה!\""
+      {
+        id: "consultation", icon: "🩺", label: "ייעוץ רפואי מומחה", color: "#0ea5e9", light: "#e0f2fe",
+        sublabel: "ייעוץ עם רופא מומחה",
+        docs: "קבלה + סיכום ביקור + אישור ניהול חשבון / שיק מבוטל",
+        prompt: "אתה עוזר לתביעת ביטוח בריאות בנושא ייעוץ רפואי עם רופא מומחה. דבר בעברית בלבד.\nאנחנו כאן לעזור לך להגיש את תביעתך במהירות ובקלות!\n" + COMMON_RULES + "\nאסוף את הפרטים הבאים בשיחה טבעית ונעימה:\n1. שם מלא\n2. תעודת זהות של המבוטח שעבורו מוגשת התביעה\n3. מספר פוליסה (אם ידוע)\n4. שם הרופא / מומחה שנתן הייעוץ\n5. התמחות הרופא (קרדיולוג, אורתופד וכד')\n6. תאריך הביקור\n7. סכום ששולם\n8. האם הופנה על ידי רופא משפחה? (כן/לא)\nלאחר איסוף הפרטים — הפנה ללחוץ על כפתור העלאת מסמכים במסך.\nבסוף — סכם הכל ובקש אישור. אחרי אישור — כתוב בדיוק: \"✅ התביעה נשלחה!\""
       },
-      { id:"alternative", icon:"🌿", label:"רפואה משלימה ופיזיותרפיה", color:"#22c55e", light:"#dcfce7",
-        sublabel:"טיפולים אלטרנטיביים כולל פיזיותרפיה",
-        docs:"הפניה לטיפול + תעודת מטפל + קבלות + אישור ניהול חשבון / שיק מבוטל",
-        prompt:"אתה עוזר לתביעת ביטוח בריאות בנושא רפואה משלימה ופיזיותרפיה. דבר בעברית בלבד.\nאנחנו כאן לעזור לך להגיש את תביעתך במהירות ובקלות!\n"+COMMON_RULES+"\nתהליך:\n1. בקש שם מלא\n2. בקש את מספר תעודת הזהות של המבוטח שעבורו מוגשת התביעה\n3. הפנה ללחוץ על כפתור העלאת מסמכים שמופיע במסך\n4. אחרי אישור — כתוב בדיוק: \"✅ התביעה נשלחה!\"\nחשוב — תשלום לחשבון המבוטח בלבד."
+      {
+        id: "alternative", icon: "🌿", label: "רפואה משלימה ופיזיותרפיה", color: "#22c55e", light: "#dcfce7",
+        sublabel: "טיפולים אלטרנטיביים כולל פיזיותרפיה",
+        docs: "הפניה לטיפול + תעודת מטפל מוסמך + קבלות + אישור ניהול חשבון / שיק מבוטל",
+        prompt: "אתה עוזר לתביעת ביטוח בריאות בנושא רפואה משלימה ופיזיותרפיה. דבר בעברית בלבד.\nאנחנו כאן לעזור לך להגיש את תביעתך במהירות ובקלות!\n" + COMMON_RULES + "\nאסוף את הפרטים הבאים בשיחה טבעית ונעימה:\n1. שם מלא\n2. תעודת זהות של המבוטח שעבורו מוגשת התביעה\n3. מספר פוליסה (אם ידוע)\n4. סוג הטיפול (דיקור, כירופרקטיקה, נטורופתיה, פיזיותרפיה וכד')\n5. שם המטפל / מרפאה\n6. תאריך הטיפול\n7. מספר הטיפולים (אם סדרה)\n8. סכום כולל ששולם\nחשוב: תשלום יועבר אך ורק לחשבון המבוטח עצמו.\nלאחר איסוף הפרטים — הפנה ללחוץ על כפתור העלאת מסמכים במסך.\nבסוף — סכם הכל ובקש אישור. אחרי אישור — כתוב בדיוק: \"✅ התביעה נשלחה!\""
       },
-      { id:"diagnostic", icon:"🔬", label:"בדיקה אבחנתית", color:"#8b5cf6", light:"#ede9fe",
-        sublabel:"MRI, CT, בדיקות הריון ועוד",
-        docs:"הפניה לבדיקה + סיכום ביקור רפואי + קבלה + אישור ניהול חשבון / שיק מבוטל",
-        prompt:"אתה עוזר לתביעת ביטוח בריאות בנושא בדיקה אבחנתית. דבר בעברית בלבד.\nאנחנו כאן לעזור לך להגיש את תביעתך במהירות ובקלות!\n"+COMMON_RULES+"\nתהליך:\n1. בקש שם מלא\n2. בקש את מספר תעודת הזהות של המבוטח שעבורו מוגשת התביעה\n3. הפנה ללחוץ על כפתור העלאת מסמכים שמופיע במסך\n4. אחרי אישור — כתוב בדיוק: \"✅ התביעה נשלחה!\""
+      {
+        id: "diagnostic", icon: "🔬", label: "בדיקה אבחנתית", color: "#8b5cf6", light: "#ede9fe",
+        sublabel: "MRI, CT, בדיקות הריון ועוד",
+        docs: "הפניה לבדיקה + סיכום ביקור רפואי + קבלה + אישור ניהול חשבון / שיק מבוטל",
+        prompt: "אתה עוזר לתביעת ביטוח בריאות בנושא בדיקה אבחנתית. דבר בעברית בלבד.\nאנחנו כאן לעזור לך להגיש את תביעתך במהירות ובקלות!\n" + COMMON_RULES + "\nאסוף את הפרטים הבאים בשיחה טבעית ונעימה:\n1. שם מלא\n2. תעודת זהות של המבוטח שעבורו מוגשת התביעה\n3. מספר פוליסה (אם ידוע)\n4. סוג הבדיקה (MRI, CT, אולטרסאונד, בדיקת דם מיוחדת וכד')\n5. איבר / אזור שנבדק\n6. שם המרכז הרפואי / מעבדה\n7. תאריך הבדיקה\n8. האם יש הפניה רפואית? (חובה לרוב)\n9. סכום ששולם\nלאחר איסוף הפרטים — הפנה ללחוץ על כפתור העלאת מסמכים במסך.\nבסוף — סכם הכל ובקש אישור. אחרי אישור — כתוב בדיוק: \"✅ התביעה נשלחה!\""
       },
-      { id:"surgery", icon:"🏥", label:"ניתוח בארץ", color:"#ef4444", light:"#fee2e2",
-        sublabel:"פוליסות מ-02/2016 בלבד — לפני כן פנה לסוכן",
-        docs:"הפניה לניתוח + קבלה ייעוץ טרום ניתוח + אישור ניהול חשבון / שיק מבוטל",
-        prompt:"אתה עוזר לתביעת ביטוח בריאות בנושא ניתוח בארץ. דבר בעברית בלבד. היה חם וסבלני.\nאנחנו כאן לעזור לך להגיש את תביעתך במהירות ובקלות!\n"+COMMON_RULES+"\nכיסוי קיים רק בפוליסות מ-02/2016 ואילך. לפני כן — הפנה לסוכן 03-3731410.\nתהליך:\n1. בקש שם מלא\n2. בקש את מספר תעודת הזהות של המבוטח שעבורו מוגשת התביעה\n3. שאל מתי נרכשה הפוליסה\n4. אם מתאים — בקש להעלות את המסמכים הנדרשים\n5. אחרי אישור — כתוב בדיוק: \"✅ התביעה נשלחה!\""
+      {
+        id: "surgery", icon: "🏥", label: "ניתוח בארץ", color: "#ef4444", light: "#fee2e2",
+        sublabel: "פוליסות מ-02/2016 בלבד — לפני כן פנה לסוכן",
+        docs: "הפניה לניתוח + קבלה ייעוץ טרום ניתוח + אישור ניהול חשבון / שיק מבוטל",
+        prompt: "אתה עוזר לתביעת ביטוח בריאות בנושא ניתוח בארץ. דבר בעברית בלבד. היה חם וסבלני.\nאנחנו כאן לעזור לך להגיש את תביעתך במהירות ובקלות!\n" + COMMON_RULES + "\nכיסוי קיים רק בפוליסות מ-02/2016 ואילך. אם לפני כן — הפנה לסוכן 03-3731410.\nאסוף את הפרטים הבאים בשיחה טבעית ונעימה:\n1. שם מלא\n2. תעודת זהות של המבוטח שעבורו מוגשת התביעה\n3. מספר פוליסה\n4. מתי נרכשה הפוליסה? (לפני או אחרי 02/2016)\n5. שם הניתוח / הפעולה הרפואית\n6. שם בית החולים / המרכז הרפואי\n7. שם המנתח הראשי\n8. תאריך הניתוח\n9. האם ניתוח דחוף או מתוכנן?\n10. ימי אשפוז (אם רלוונטי)\n11. עלות המנתח הפרטי (אם רלוונטי)\n12. עלות הרדמה פרטית (אם רלוונטי)\n13. הוצאות נוספות (תרופות, ציוד וכד')\nלאחר איסוף הפרטים — הפנה ללחוץ על כפתור העלאת מסמכים במסך.\nבסוף — סכם הכל ובקש אישור. אחרי אישור — כתוב בדיוק: \"✅ התביעה נשלחה!\""
       },
-      { id:"child", icon:"👶", label:"התפתחות הילד", color:"#f59e0b", light:"#fef3c7",
-        sublabel:"פסיכולוג, קלינאי, ריפוי בעיסוק, שחייה/רכיבה טיפולית ועוד...",
-        docs:"הפניה מרופא מומחה + קבלות + אישור ניהול חשבון / שיק מבוטל",
-        prompt:"אתה עוזר לתביעת ביטוח בריאות בנושא התפתחות הילד. דבר בעברית בלבד. היה חם.\nאנחנו כאן לעזור לך להגיש את תביעתך במהירות ובקלות!\n"+COMMON_RULES+"\nהפניה חייבת מ: מומחה התפתחות הילד (ותק 3+ שנים) או נוירולוג ילדים בלבד. אחרת — הפנה לסוכן 03-3731410.\nתהליך:\n1. בקש שם מלא\n2. בקש את מספר תעודת הזהות של המבוטח שעבורו מוגשת התביעה\n3. הפנה ללחוץ על כפתור העלאת מסמכים שמופיע במסך\n4. אחרי אישור — כתוב בדיוק: \"✅ התביעה נשלחה!\""
+      {
+        id: "child", icon: "👶", label: "התפתחות הילד", color: "#f59e0b", light: "#fef3c7",
+        sublabel: "פסיכולוג, קלינאי, ריפוי בעיסוק, שחייה/רכיבה טיפולית ועוד...",
+        docs: "הפניה מרופא מומחה + קבלות + אישור ניהול חשבון / שיק מבוטל",
+        prompt: "אתה עוזר לתביעת ביטוח בריאות בנושא התפתחות הילד. דבר בעברית בלבד. היה חם ומסביר פנים.\nאנחנו כאן לעזור לך להגיש את תביעתך במהירות ובקלות!\n" + COMMON_RULES + "\nהפניה חייבת מ: מומחה התפתחות הילד (ותק 3+ שנים) או נוירולוג ילדים בלבד. אחרת — הפנה לסוכן 03-3731410.\nהטיפולים כוללים: פסיכולוג, קלינאי תקשורת, ריפוי בעיסוק, שחייה טיפולית, רכיבה טיפולית, ייעוצים התפתחותיים.\nאסוף את הפרטים הבאים בשיחה טבעית ונעימה:\n1. שם מלא של ההורה / מגיש התביעה\n2. תעודת זהות של המבוטח (הילד)\n3. מספר פוליסה (אם ידוע)\n4. סוג הטיפול (פסיכולוג, קלינאי תקשורת, ריפוי בעיסוק וכד')\n5. שם המטפל / מרפאה\n6. תאריך תחילת הטיפולים\n7. מספר טיפולים שבוצעו\n8. עלות לטיפול + סה\"כ\n9. פרטי הרופא המפנה (שם + התמחות)\nלאחר איסוף הפרטים — הפנה ללחוץ על כפתור העלאת מסמכים במסך.\nבסוף — סכם הכל ובקש אישור. אחרי אישור — כתוב בדיוק: \"✅ התביעה נשלחה!\""
       },
-      { id:"accident", icon:"🚑", label:"תאונות אישיות — שברים", color:"#db2777", light:"#fce7f3",
-        sublabel:"שברים בלבד — לכל דבר אחר פנה לסוכן",
-        docs:"דו\"ח רפואי המציין שבר + אישור ניהול חשבון / שיק מבוטל",
-        prompt:"אתה עוזר לתביעת ביטוח בנושא תאונות אישיות — שברים בלבד. דבר בעברית בלבד. היה חם.\n"+COMMON_RULES+"\nקטגוריה זו לשברים בלבד. פציעה אחרת — הפנה לסוכן 03-3731410.\nתהליך:\n1. בקש שם מלא\n2. בקש את מספר תעודת הזהות של המבוטח שעבורו מוגשת התביעה\n3. וודא שמדובר בשבר\n4. הפנה ללחוץ על כפתור העלאת מסמכים שמופיע במסך\n5. אחרי אישור — כתוב בדיוק: \"✅ התביעה נשלחה!\""
+      {
+        id: "accident", icon: "🚑", label: "תאונות אישיות — שברים", color: "#db2777", light: "#fce7f3",
+        sublabel: "שברים בלבד — לכל דבר אחר פנה לסוכן",
+        docs: "דו\"ח רפואי המציין שבר + אישור ניהול חשבון / שיק מבוטל",
+        prompt: "אתה עוזר לתביעת ביטוח בנושא תאונות אישיות — שברים בלבד. דבר בעברית בלבד. היה חם ואמפתי.\n" + COMMON_RULES + "\nקטגוריה זו לשברים בלבד. פציעה אחרת (חתכים, נקעים, חבלות) — הפנה לסוכן 03-3731410.\nאסוף את הפרטים הבאים בשיחה טבעית ונעימה:\n1. שם מלא\n2. תעודת זהות של המבוטח שעבורו מוגשת התביעה\n3. מספר פוליסה (אם ידוע)\n4. תיאור התאונה — מה קרה?\n5. תאריך ושעת התאונה\n6. מקום התאונה (בית, רחוב, עבודה וכד')\n7. איזה איבר / אזור נשבר?\n8. האם טופל בחדר מיון? באיזה בית חולים?\n9. האם אושפז? כמה ימים?\n10. האם יש ימי אי כושר עבודה? כמה ימים?\n11. האם בוצע ניתוח כתוצאה מהתאונה?\n12. סך כל ההוצאות הרפואיות\nלאחר איסוף הפרטים — הפנה ללחוץ על כפתור העלאת מסמכים במסך.\nבסוף — סכם הכל ובקש אישור. אחרי אישור — כתוב בדיוק: \"✅ התביעה נשלחה!\""
       }
     ];
- 
-    // רכיב כרטיס העלאת מסמך
-    function DocCard({ docName, accent, onFileChange, uploadedFile }) {
-      const [dragOver, setDragOver] = useState(false);
-      const [sizeError, setSizeError] = useState(false);
-      const inputRef = useRef(null);
-      const icon = DOC_ICONS[docName] || "📄";
- 
-      const handleFile = (file) => {
-        if (file.size > MAX_FILE_SIZE) {
-          setSizeError(true);
-          setTimeout(() => setSizeError(false), 4000);
-          return;
-        }
-        setSizeError(false);
-        onFileChange(docName, file);
-      };
- 
-      const handleDrop = (e) => {
-        e.preventDefault();
-        setDragOver(false);
-        const file = e.dataTransfer.files[0];
-        if (file) handleFile(file);
-      };
- 
-      return (
-        <div className={`doc-card ${uploadedFile ? 'has-file' : ''}`}
-          style={{ background:"#fff", borderRadius:16, padding:"16px", boxShadow:"0 2px 12px rgba(0,0,0,0.07)",
-            border: uploadedFile ? `2px solid #22c55e` : "2px solid #f1f5f9",
-            animation:"slideUp 0.3s ease both" }}>
-          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:12 }}>
-            <span style={{ fontSize:11, fontWeight:700, color:"#94a3b8", textTransform:"uppercase", letterSpacing:"0.5px" }}>מסמך נדרש</span>
-            <span style={{ fontSize:13, fontWeight:700, color:"#1e293b" }}>{docName}</span>
-          </div>
- 
-          {!uploadedFile ? (
-            <div className="upload-zone"
-              onClick={() => inputRef.current?.click()}
-              onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-              onDragLeave={() => setDragOver(false)}
-              onDrop={handleDrop}
-              style={{ border:`2px dashed ${dragOver ? accent : "#cbd5e1"}`,
-                borderRadius:12, padding:"20px 16px", textAlign:"center", cursor:"pointer",
-                background: dragOver ? "#f0f9ff" : "#fafbfc", transition:"all 0.2s" }}>
-              <div style={{ fontSize:36, marginBottom:8 }}>{icon}</div>
-              <div style={{ fontSize:13, fontWeight:600, color:"#1e293b", marginBottom:4 }}>גרור קובץ לכאן</div>
-              <div style={{ fontSize:12, color:"#94a3b8", marginBottom:10 }}>או</div>
-              <div style={{ display:"inline-block", background:accent, color:"#fff", borderRadius:20,
-                padding:"6px 16px", fontSize:12, fontWeight:700 }}>בחר קובץ</div>
-              <div style={{ fontSize:10, color:"#cbd5e1", marginTop:8 }}>PDF, JPG, PNG, Word</div>
-            </div>
-          ) : (
-            <div style={{ background:"#f0fdf4", borderRadius:12, padding:"14px 16px",
-              display:"flex", alignItems:"center", justifyContent:"space-between" }}>
-              <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-                <div style={{ width:36, height:36, borderRadius:10, background:"#22c55e",
-                  display:"flex", alignItems:"center", justifyContent:"center", fontSize:18 }}>✅</div>
-                <div>
-                  <div style={{ fontSize:12, fontWeight:700, color:"#15803d" }}>הועלה בהצלחה</div>
-                  <div style={{ fontSize:11, color:"#16a34a", maxWidth:160, overflow:"hidden",
-                    textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{uploadedFile.name}</div>
-                </div>
-              </div>
-              <button onClick={() => { onFileChange(docName, null); }}
-                style={{ background:"none", border:"1px solid #86efac", borderRadius:20,
-                  padding:"4px 10px", fontSize:11, color:"#15803d", cursor:"pointer", fontFamily:"'Heebo',sans-serif" }}>
-                החלף
-              </button>
-            </div>
-          )}
-          {sizeError && (
-            <div style={{background:"#fef2f2",border:"1px solid #fca5a5",borderRadius:10,
-              padding:"8px 12px",marginTop:8,fontSize:12,color:"#dc2626",textAlign:"center"}}>
-              ⚠️ הקובץ גדול מדי! גודל מקסימלי: 5MB
-            </div>
-          )}
-          <input ref={inputRef} type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-            onChange={e => { if(e.target.files[0]) handleFile(e.target.files[0]); e.target.value=""; }}
-            style={{ display:"none" }} />
-        </div>
-      );
-    }
- 
-    // פאנל העלאת מסמכים
-    function DocUploadPanel({ claimId, accent, onAllUploaded, uploadedDocs, onFileChange }) {
-      const docs = CLAIM_DOCS[claimId] || [];
-      const uploadedCount = docs.filter(d => uploadedDocs[d]).length;
-      const hasAtLeastOne = uploadedCount > 0;
-      const allUploaded = docs.every(d => uploadedDocs[d]);
- 
-      return (
-        <div style={{ background:"#f8fafc", padding:"16px", borderTop:"1px solid #f1f5f9" }}>
-          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:14 }}>
-            <div style={{ fontSize:13, fontWeight:700, color:"#1e293b" }}>📎 העלאת מסמכים</div>
-            <div style={{ fontSize:12, color: allUploaded ? "#15803d" : "#64748b" }}>
-              {uploadedCount}/{docs.length} הועלו
-              {allUploaded && " ✅"}
-            </div>
-          </div>
- 
-          {/* Progress bar */}
-          <div style={{ background:"#e2e8f0", borderRadius:10, height:6, marginBottom:16 }}>
-            <div style={{ background:accent, height:"100%", borderRadius:10,
-              width:`${(uploadedCount/docs.length)*100}%`, transition:"width 0.4s ease" }} />
-          </div>
- 
-          <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
-            {docs.map((doc, i) => (
-              <DocCard key={doc} docName={doc} accent={accent}
-                uploadedFile={uploadedDocs[doc] || null}
-                onFileChange={onFileChange} />
-            ))}
-          </div>
- 
-          {hasAtLeastOne && (
-            <button onClick={onAllUploaded}
-              style={{ marginTop:14, width:"100%", background:`linear-gradient(135deg, ${accent}, ${accent}dd)`,
-                color:"#fff", border:"none", borderRadius:12, padding:"16px", fontSize:15, fontWeight:800,
-                cursor:"pointer", fontFamily:"'Heebo',sans-serif",
-                boxShadow:`0 6px 20px ${accent}55`,
-                animation:"popIn 0.3s ease",
-                letterSpacing:"0.3px" }}>
-              📤 לחץ כאן לשליחת המסמכים והגשת התביעה
-            </button>
-          )}
-          {hasAtLeastOne && !allUploaded && (
-            <div style={{textAlign:"center", marginTop:8, fontSize:12, color:"#f59e0b", fontWeight:600}}>
-              ⚠️ לא כל המסמכים הועלו — ניתן לשלוח אך מומלץ להעלות את כולם
-            </div>
-          )}
-          {hasAtLeastOne && allUploaded && (
-            <div style={{textAlign:"center", marginTop:8, fontSize:12, color:"#94a3b8"}}>
-              ⬆️ יש ללחוץ על הכפתור כדי להשלים את הגשת התביעה
-            </div>
-          )}
-          {!hasAtLeastOne && (
-            <div style={{textAlign:"center", marginTop:14, padding:"12px", background:"#fef2f2",
-              borderRadius:10, fontSize:12, color:"#dc2626", fontWeight:600, border:"1px solid #fca5a5"}}>
-              ❌ יש להעלות לפחות מסמך אחד לפני השליחה
-            </div>
-          )}
-        </div>
-      );
-    }
- 
-    const TypingDots = ({color}) => (
-      <div style={{display:"flex",gap:5,padding:"8px 4px",alignItems:"center"}}>
-        {[0,1,2].map(i=><div key={i} style={{width:8,height:8,borderRadius:"50%",background:color,animation:"bounce 1.2s infinite",animationDelay:`${i*0.2}s`}}/>)}
-      </div>
-    );
- 
-    const WEBHOOK_URL = "https://hook.eu1.make.com/y1kwo7yb6r2xxvt81m1er9cj2586qa3l";
-    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
- 
-    // המרת קובץ ל-Base64
-    const fileToBase64 = (file) => new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result.split(",")[1]);
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
  
     // ולידציה תעודת זהות ישראלית
     const isValidIsraeliID = (id) => {
@@ -265,15 +110,10 @@
       for (let i = 0; i < history.length; i++) {
         const msg = history[i];
         if (msg.role === "assistant") {
-          // חפש את התשובה הבאה של המשתמש
           const nextUser = history[i + 1];
           if (nextUser && nextUser.role === "user") {
             const label = msg.content.replace(/\n/g, " ").slice(0, 100) + (msg.content.length > 100 ? "..." : "");
-            answers.push({
-              fieldId: "q_" + answers.length,
-              label,
-              value: nextUser.content
-            });
+            answers.push({ fieldId: "q_" + answers.length, label, value: nextUser.content });
           }
         }
       }
@@ -281,43 +121,148 @@
     };
  
     // שליחה ל-Webhook
-    const sendToWebhook = async (claimType, history, uploadedDocs) => {
-      const submissionId = "KD-" + Date.now();
-      const submittedAt = new Date().toISOString();
+    const WEBHOOK_URL = "https://hook.eu1.make.com/y1kwo7yb6r2xxvt81m1er9cj2586qa3l";
+    const MAX_FILE_SIZE = 5 * 1024 * 1024;
  
-      // עיבוד מסמכים עם Base64
+    const fileToBase64 = (file) => new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result.split(",")[1]);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+ 
+    const sendToWebhook = async (claimType, history, uploadedDocs) => {
       const documents = await Promise.all(
         Object.entries(uploadedDocs).map(async ([docName, file]) => {
           let base64 = null;
-          try { base64 = await fileToBase64(file); } catch(e) { base64 = null; }
-          return {
-            documentName: docName,
-            fileName: file.name,
-            mimeType: file.type || "application/octet-stream",
-            fileSize: file.size,
-            base64
-          };
+          try { base64 = await fileToBase64(file); } catch(e) {}
+          return { documentName: docName, fileName: file.name, mimeType: file.type || "application/octet-stream", fileSize: file.size, base64 };
         })
       );
- 
       const payload = {
-        submissionId,
-        submittedAt,
+        submissionId: "KD-" + Date.now(),
+        submittedAt: new Date().toISOString(),
         claimType: { id: claimType.id, label: claimType.label },
         answers: extractAnswers(history),
         documents
       };
- 
       try {
-        await fetch(WEBHOOK_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        });
-      } catch(e) {
-        console.warn("Webhook error:", e);
-      }
+        await fetch(WEBHOOK_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+      } catch(e) { console.warn("Webhook error:", e); }
     };
+ 
+    // רכיב כרטיס העלאת מסמך
+    function DocCard({ docName, accent, onFileChange, uploadedFile }) {
+      const [dragOver, setDragOver] = useState(false);
+      const [sizeError, setSizeError] = useState(false);
+      const inputRef = useRef(null);
+      const icon = DOC_ICONS[docName] || "📄";
+ 
+      const handleFile = (file) => {
+        if (file.size > MAX_FILE_SIZE) { setSizeError(true); setTimeout(() => setSizeError(false), 4000); return; }
+        setSizeError(false);
+        onFileChange(docName, file);
+      };
+ 
+      const handleDrop = (e) => {
+        e.preventDefault(); setDragOver(false);
+        const file = e.dataTransfer.files[0];
+        if (file) handleFile(file);
+      };
+ 
+      return (
+        <div className={`doc-card ${uploadedFile ? "has-file" : ""}`}
+          style={{ background:"#fff", borderRadius:16, padding:"16px", boxShadow:"0 2px 12px rgba(0,0,0,0.07)", border: uploadedFile ? "2px solid #22c55e" : "2px solid #f1f5f9", animation:"slideUp 0.3s ease both" }}>
+          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:12 }}>
+            <span style={{ fontSize:11, fontWeight:700, color:"#94a3b8", textTransform:"uppercase", letterSpacing:"0.5px" }}>מסמך נדרש</span>
+            <span style={{ fontSize:13, fontWeight:700, color:"#1e293b" }}>{docName}</span>
+          </div>
+          {!uploadedFile ? (
+            <div className="upload-zone" onClick={() => inputRef.current?.click()}
+              onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+              onDragLeave={() => setDragOver(false)} onDrop={handleDrop}
+              style={{ border:`2px dashed ${dragOver ? accent : "#cbd5e1"}`, borderRadius:12, padding:"20px 16px", textAlign:"center", cursor:"pointer", background: dragOver ? "#f0f9ff" : "#fafbfc", transition:"all 0.2s" }}>
+              <div style={{ fontSize:36, marginBottom:8 }}>{icon}</div>
+              <div style={{ fontSize:13, fontWeight:600, color:"#1e293b", marginBottom:4 }}>גרור קובץ לכאן</div>
+              <div style={{ fontSize:12, color:"#94a3b8", marginBottom:10 }}>או</div>
+              <div style={{ display:"inline-block", background:accent, color:"#fff", borderRadius:20, padding:"6px 16px", fontSize:12, fontWeight:700 }}>בחר קובץ</div>
+              <div style={{ fontSize:10, color:"#cbd5e1", marginTop:8 }}>PDF, JPG, PNG, Word</div>
+            </div>
+          ) : (
+            <div style={{ background:"#f0fdf4", borderRadius:12, padding:"14px 16px", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+              <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+                <div style={{ width:36, height:36, borderRadius:10, background:"#22c55e", display:"flex", alignItems:"center", justifyContent:"center", fontSize:18 }}>✅</div>
+                <div>
+                  <div style={{ fontSize:12, fontWeight:700, color:"#15803d" }}>הועלה בהצלחה</div>
+                  <div style={{ fontSize:11, color:"#16a34a", maxWidth:160, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{uploadedFile.name}</div>
+                </div>
+              </div>
+              <button onClick={() => onFileChange(docName, null)}
+                style={{ background:"none", border:"1px solid #86efac", borderRadius:20, padding:"4px 10px", fontSize:11, color:"#15803d", cursor:"pointer", fontFamily:"'Heebo',sans-serif" }}>החלף</button>
+            </div>
+          )}
+          {sizeError && (
+            <div style={{ background:"#fef2f2", border:"1px solid #fca5a5", borderRadius:10, padding:"8px 12px", marginTop:8, fontSize:12, color:"#dc2626", textAlign:"center" }}>
+              ⚠️ הקובץ גדול מדי! גודל מקסימלי: 5MB
+            </div>
+          )}
+          <input ref={inputRef} type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+            onChange={e => { if(e.target.files[0]) handleFile(e.target.files[0]); e.target.value=""; }}
+            style={{ display:"none" }} />
+        </div>
+      );
+    }
+ 
+    function DocUploadPanel({ claimId, accent, onAllUploaded, uploadedDocs, onFileChange }) {
+      const docs = CLAIM_DOCS[claimId] || [];
+      const uploadedCount = docs.filter(d => uploadedDocs[d]).length;
+      const hasAtLeastOne = uploadedCount > 0;
+      const allUploaded = docs.every(d => uploadedDocs[d]);
+ 
+      return (
+        <div style={{ background:"#f8fafc", padding:"16px", borderTop:"1px solid #f1f5f9" }}>
+          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:14 }}>
+            <div style={{ fontSize:13, fontWeight:700, color:"#1e293b" }}>📎 העלאת מסמכים</div>
+            <div style={{ fontSize:12, color: allUploaded ? "#15803d" : "#64748b" }}>{uploadedCount}/{docs.length} הועלו{allUploaded && " ✅"}</div>
+          </div>
+          <div style={{ background:"#e2e8f0", borderRadius:10, height:6, marginBottom:16 }}>
+            <div style={{ background:accent, height:"100%", borderRadius:10, width:`${(uploadedCount/docs.length)*100}%`, transition:"width 0.4s ease" }} />
+          </div>
+          <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+            {docs.map((doc) => (
+              <DocCard key={doc} docName={doc} accent={accent} uploadedFile={uploadedDocs[doc] || null} onFileChange={onFileChange} />
+            ))}
+          </div>
+          {hasAtLeastOne && (
+            <button onClick={onAllUploaded}
+              style={{ marginTop:14, width:"100%", background:`linear-gradient(135deg, ${accent}, ${accent}dd)`, color:"#fff", border:"none", borderRadius:12, padding:"16px", fontSize:15, fontWeight:800, cursor:"pointer", fontFamily:"'Heebo',sans-serif", boxShadow:`0 6px 20px ${accent}55`, animation:"popIn 0.3s ease", letterSpacing:"0.3px" }}>
+              📤 לחץ כאן לשליחת המסמכים והגשת התביעה
+            </button>
+          )}
+          {hasAtLeastOne && !allUploaded && (
+            <div style={{ textAlign:"center", marginTop:8, fontSize:12, color:"#f59e0b", fontWeight:600 }}>
+              ⚠️ לא כל המסמכים הועלו — ניתן לשלוח אך מומלץ להעלות את כולם
+            </div>
+          )}
+          {hasAtLeastOne && allUploaded && (
+            <div style={{ textAlign:"center", marginTop:8, fontSize:12, color:"#94a3b8" }}>
+              ⬆️ יש ללחוץ על הכפתור כדי להשלים את הגשת התביעה
+            </div>
+          )}
+          {!hasAtLeastOne && (
+            <div style={{ textAlign:"center", marginTop:14, padding:"12px", background:"#fef2f2", borderRadius:10, fontSize:12, color:"#dc2626", fontWeight:600, border:"1px solid #fca5a5" }}>
+              ❌ יש להעלות לפחות מסמך אחד לפני השליחה
+            </div>
+          )}
+        </div>
+      );
+    }
+ 
+    const TypingDots = ({color}) => (
+      <div style={{display:"flex",gap:5,padding:"8px 4px",alignItems:"center"}}>
+        {[0,1,2].map(i=><div key={i} style={{width:8,height:8,borderRadius:"50%",background:color,animation:"bounce 1.2s infinite",animationDelay:`${i*0.2}s`}}/>)}
+      </div>
+    );
  
     function App() {
       const [ct, setCt] = useState(null);
@@ -332,14 +277,11 @@
  
       useEffect(()=>{bottomRef.current?.scrollIntoView({behavior:"smooth"});},[messages,loading,showUpload]);
  
-      const reset=()=>{
-        setCt(null);setMessages([]);setHistory([]);setSubmitted(false);
-        setInput("");setShowUpload(false);setUploadedDocs({});
-      };
+      const reset=()=>{ setCt(null);setMessages([]);setHistory([]);setSubmitted(false);setInput("");setShowUpload(false);setUploadedDocs({}); };
  
       const startChat=(type)=>{
         setCt(type);
-        setMessages([{role:"assistant",content:`היי! 👋 אני הרובוט החכם של סוכנות Kaplan & Dahan 🤖\nאני כאן לעזור לך להגיש את תביעתך במהירות ובקלות!\n\nנתחיל — מה שמך המלא?`}]);
+        setMessages([{role:"assistant",content:`היי! 👋 אני הרובוט החכם של סוכנות Kaplan & Dahan 🤖\nאני כאן לעזור לך להגיש את תביעתך במהירות ובקלות!\n\nתצטרך:\n• ${type.docs}\n\nנתחיל — מה שמך המלא?`}]);
         setHistory([]);setSubmitted(false);setShowUpload(false);setUploadedDocs({});setInput("");
       };
  
@@ -353,24 +295,15 @@
       };
  
       const handleAllUploaded = async () => {
-        const uploadedCount = Object.keys(uploadedDocs).length;
-        if (uploadedCount === 0) return;
- 
-        // שלח וובהוק מיד עם לחיצה על הכפתור
+        if (Object.keys(uploadedDocs).length === 0) return;
         sendToWebhook(ct, history, uploadedDocs);
- 
-        const fileNames = Object.entries(uploadedDocs).map(([doc, file]) => `${doc}: ${file.name}`).join(", ");
         const missingDocs = (CLAIM_DOCS[ct.id] || []).filter(d => !uploadedDocs[d]);
- 
         setMessages(p=>[...p,{role:"user",content:"✅ שלחתי את המסמכים",files:Object.values(uploadedDocs)}]);
         setShowUpload(false);
         setSubmitted(true);
- 
-        // הצג הודעת סיום ישירה ללא תלות בבוט
         const successMsg = missingDocs.length > 0
           ? `✅ התביעה נשלחה!\n\nהמסמכים שהעלית התקבלו ועברו לטיפול.\n\n⚠️ שים לב: המסמכים הבאים חסרים ועשויים לעכב את הטיפול:\n${missingDocs.map(d=>`• ${d}`).join("\n")}\n\nנציג יצור איתך קשר בהקדם. לשאלות: 03-3731410`
           : `✅ התביעה נשלחה בהצלחה!\n\nכל המסמכים התקבלו ועברו לבדיקה.\nנעדכן אותך בהתקדמות התביעה בהקדם 😊\n\nלשאלות: 03-3731410`;
- 
         setMessages(p=>[...p,{role:"assistant",content:successMsg}]);
       };
  
@@ -378,21 +311,14 @@
         if(!text.trim())return;
         if(submitted||!ct)return;
  
-        // ולידציה ת.ז — אם ההיסטוריה מכילה שאלה על ת.ז והתשובה לא תקינה
+        // ולידציה ת.ז
         const lastAssistantMsg = [...history].reverse().find(m => m.role === "assistant");
-        const isAskingForID = lastAssistantMsg && (
-          lastAssistantMsg.content.includes("תעודת זהות") ||
-          lastAssistantMsg.content.includes("ת.ז") ||
-          lastAssistantMsg.content.includes("מספר זהות")
-        );
+        const isAskingForID = lastAssistantMsg && (lastAssistantMsg.content.includes("תעודת זהות") || lastAssistantMsg.content.includes("ת.ז") || lastAssistantMsg.content.includes("מספר זהות"));
         if (isAskingForID && /^\d+$/.test(text.trim()) && !isValidIsraeliID(text.trim())) {
-          setMessages(p=>[...p,
-            {role:"user", content:text},
-            {role:"assistant", content:"⚠️ מספר תעודת הזהות שהזנת אינו תקין.\nתעודת זהות ישראלית חייבת להכיל 9 ספרות תקינות.\nנא להזין שוב את מספר תעודת הזהות של המבוטח:"}
-          ]);
-          setInput("");
-          return;
+          setMessages(p=>[...p,{role:"user",content:text},{role:"assistant",content:"⚠️ מספר תעודת הזהות שהזנת אינו תקין.\nתעודת זהות ישראלית חייבת להכיל 9 ספרות תקינות.\nנא להזין שוב:"}]);
+          setInput(""); return;
         }
+ 
         const newHistory=[...history,{role:"user",content:text}];
         setMessages(p=>[...p,{role:"user",content:text}]);
         setInput("");setLoading(true);
@@ -401,17 +327,12 @@
             body:JSON.stringify({model:"claude-sonnet-4-5",max_tokens:1000,system:ct.prompt,messages:newHistory})});
           const data=await res.json();
           const reply=data.content?.[0]?.text||"מצטער, הייתה שגיאה.";
-          // אם הבוט מאשר העלאה אבל הלקוח עוד לא לחץ על כפתור — הוסף תזכורת
-          const reminderNeeded = (reply.includes("הועלו") || reply.includes("קיבלתי") || reply.includes("תביעה נשלחה")) && !showUpload;
-          const finalReply = reminderNeeded && !reply.includes("✅ התביעה נשלחה")
-            ? reply + "\n\n📌 **לסיום — יש ללחוץ על הכפתור הירוק למטה לשליחת המסמכים**"
-            : reply;
-          setMessages(p=>[...p,{role:"assistant",content:finalReply}]);
-          setHistory([...newHistory,{role:"assistant",content:finalReply}]);
-          if(finalReply.includes("העלה") || finalReply.includes("העלאת") || finalReply.includes("מסמכים הנדרשים") || finalReply.includes("להעלות")) {
+          setMessages(p=>[...p,{role:"assistant",content:reply}]);
+          setHistory([...newHistory,{role:"assistant",content:reply}]);
+          if(reply.includes("העלה") || reply.includes("העלאת") || reply.includes("מסמכים") || reply.includes("כפתור")) {
             setShowUpload(true);
           }
-          if(finalReply.includes("✅ התביעה נשלחה")) setSubmitted(true);
+          if(reply.includes("✅ התביעה נשלחה")) setSubmitted(true);
         }catch{setMessages(p=>[...p,{role:"assistant",content:"אופס! בעיית חיבור. נסה שוב 🙏"}]);}
         finally{setLoading(false);}
       };
@@ -422,8 +343,6 @@
       return(
         <div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",padding:12}}>
           <div style={{width:"100%",maxWidth:660,borderRadius:24,overflow:"hidden",boxShadow:"0 20px 60px rgba(0,0,0,0.13)",display:"flex",flexDirection:"column"}}>
- 
-            {/* Header Logo */}
             <div style={{background:"#fff",padding:"12px 20px",borderBottom:"1px solid #f1f5f9",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
               <div style={{display:"flex",alignItems:"center",gap:10}}>
                 <div style={{width:40,height:40,borderRadius:10,background:"#1e293b",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:18,fontWeight:800}}>KD</div>
@@ -431,8 +350,6 @@
               </div>
               <a href="tel:03-3731410" style={{display:"flex",alignItems:"center",gap:6,background:ct?accent:"#1e293b",color:"#fff",borderRadius:20,padding:"7px 14px",textDecoration:"none",fontSize:13,fontWeight:700,fontFamily:"'Heebo',sans-serif",transition:"background 0.3s"}}>📞 03-3731410</a>
             </div>
- 
-            {/* Sub header */}
             <div style={{background:ct?accent:"#1e293b",padding:"11px 20px",display:"flex",alignItems:"center",justifyContent:"space-between",transition:"background 0.4s"}}>
               <div style={{display:"flex",alignItems:"center",gap:10}}>
                 <div style={{width:34,height:34,borderRadius:"50%",background:"rgba(255,255,255,0.2)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}>{ct?ct.icon:"🏥"}</div>
@@ -440,8 +357,6 @@
               </div>
               {ct&&<button onClick={reset} style={{background:"rgba(255,255,255,0.18)",border:"none",color:"#fff",borderRadius:20,padding:"5px 13px",cursor:"pointer",fontSize:12,fontFamily:"'Heebo',sans-serif"}}>← חזור</button>}
             </div>
- 
-            {/* Content */}
             {!ct?(
               <div style={{background:"#fff",padding:"24px 20px"}}>
                 <div style={{textAlign:"center",marginBottom:22}}><div style={{fontSize:20,fontWeight:800,color:"#1e293b",marginBottom:4}}>איזה סוג תביעה תרצה להגיש?</div><div style={{fontSize:13.5,color:"#64748b"}}>בחר קטגוריה ונתחיל</div></div>
@@ -466,14 +381,13 @@
               </div>
             ):(
               <>
-                {/* Messages */}
                 <div style={{background:"#f8fafc",padding:"18px 16px 10px",overflowY:"auto",minHeight:280,maxHeight:380,display:"flex",flexDirection:"column",gap:12}}>
                   {messages.map((m,i)=>(
                     <div key={i} style={{display:"flex",flexDirection:m.role==="user"?"row":"row-reverse",alignItems:"flex-end",gap:8,animation:"popIn 0.22s ease"}}>
                       <div style={{width:32,height:32,borderRadius:"50%",flexShrink:0,background:m.role==="user"?"#e2e8f0":light,display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}}>{m.role==="user"?"🧑":ct.icon}</div>
                       <div style={{maxWidth:"75%"}}>
                         <div style={{padding:"10px 14px",borderRadius:m.role==="user"?"18px 18px 18px 4px":"18px 18px 4px 18px",background:m.role==="user"?"#fff":accent,color:m.role==="user"?"#1e293b":"#fff",fontSize:14,lineHeight:1.7,whiteSpace:"pre-wrap",wordBreak:"break-word",boxShadow:"0 2px 8px rgba(0,0,0,0.06)",border:m.role==="user"?"1px solid #e2e8f0":"none"}}>{m.content}</div>
-                        {m.files?.length>0&&<div style={{display:"flex",flexWrap:"wrap",gap:4,marginTop:4}}>{m.files.map((f,fi)=><div key={fi} style={{background:light,borderRadius:20,padding:"2px 10px",fontSize:11.5,color:accent}}>📎 {typeof f === 'string' ? f : f.name}</div>)}</div>}
+                        {m.files?.length>0&&<div style={{display:"flex",flexWrap:"wrap",gap:4,marginTop:4}}>{m.files.map((f,fi)=><div key={fi} style={{background:light,borderRadius:20,padding:"2px 10px",fontSize:11.5,color:accent}}>📎 {typeof f==="string"?f:f.name}</div>)}</div>}
                       </div>
                     </div>
                   ))}
@@ -489,31 +403,17 @@
                   )}
                   <div ref={bottomRef}/>
                 </div>
- 
-                {/* Upload Panel */}
-                {showUpload && !submitted && (
-                  <DocUploadPanel
-                    claimId={ct.id}
-                    accent={accent}
-                    uploadedDocs={uploadedDocs}
-                    onFileChange={handleFileChange}
-                    onAllUploaded={handleAllUploaded}
-                  />
+                {showUpload&&!submitted&&(
+                  <DocUploadPanel claimId={ct.id} accent={accent} uploadedDocs={uploadedDocs} onFileChange={handleFileChange} onAllUploaded={handleAllUploaded} />
                 )}
- 
-                {/* כפתור להצגת פאנל העלאה ידנית */}
-                {!showUpload && !submitted && (
+                {!showUpload&&!submitted&&(
                   <div style={{background:"#fff",borderTop:"1px solid #f1f5f9",padding:"8px 14px",textAlign:"center"}}>
-                    <button onClick={()=>setShowUpload(true)}
-                      style={{background:light,color:accent,border:`1px solid ${accent}33`,borderRadius:20,
-                        padding:"6px 16px",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"'Heebo',sans-serif"}}>
+                    <button onClick={()=>setShowUpload(true)} style={{background:light,color:accent,border:`1px solid ${accent}33`,borderRadius:20,padding:"6px 16px",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"'Heebo',sans-serif"}}>
                       📎 העלה מסמכים
                     </button>
                   </div>
                 )}
- 
-                {/* Input */}
-                {!submitted && (
+                {!submitted&&(
                   <div style={{background:"#fff",borderTop:"1px solid #f1f5f9",padding:"12px 14px",display:"flex",gap:8,alignItems:"flex-end"}}>
                     <textarea value={input} onChange={e=>setInput(e.target.value)}
                       onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendMessage(input);}}}
@@ -532,7 +432,7 @@
         </div>
       );
     }
-    ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+    ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
   </script>
 </body>
 </html>
