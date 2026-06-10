@@ -246,26 +246,37 @@
       reader.readAsDataURL(file);
     });
  
-    // חילוץ שאלות ותשובות מהיסטוריית השיחה
+    // ולידציה תעודת זהות ישראלית
+    const isValidIsraeliID = (id) => {
+      const cleaned = String(id).trim();
+      if (!/^\d{9}$/.test(cleaned)) return false;
+      let sum = 0;
+      for (let i = 0; i < 9; i++) {
+        let digit = parseInt(cleaned[i]) * ((i % 2) + 1);
+        if (digit > 9) digit -= 9;
+        sum += digit;
+      }
+      return sum % 10 === 0;
+    };
+ 
+    // חילוץ כל שאלות ותשובות מהיסטוריית השיחה
     const extractAnswers = (history) => {
       const answers = [];
-      const qaPatterns = [
-        { fieldId: "full_name", label: "שם מלא" },
-        { fieldId: "id_number", label: "תעודת זהות" },
-        { fieldId: "policy_date", label: "תאריך פוליסה" },
-        { fieldId: "fracture_confirmed", label: "אישור שבר" },
-      ];
-      let assistantQ = null;
-      history.forEach(msg => {
+      for (let i = 0; i < history.length; i++) {
+        const msg = history[i];
         if (msg.role === "assistant") {
-          assistantQ = msg.content;
-        } else if (msg.role === "user" && assistantQ) {
-          const label = assistantQ.length > 80 ? assistantQ.slice(0, 80) + "..." : assistantQ;
-          const fieldId = "q_" + answers.length;
-          answers.push({ fieldId, label, value: msg.content });
-          assistantQ = null;
+          // חפש את התשובה הבאה של המשתמש
+          const nextUser = history[i + 1];
+          if (nextUser && nextUser.role === "user") {
+            const label = msg.content.replace(/\n/g, " ").slice(0, 100) + (msg.content.length > 100 ? "..." : "");
+            answers.push({
+              fieldId: "q_" + answers.length,
+              label,
+              value: nextUser.content
+            });
+          }
         }
-      });
+      }
       return answers;
     };
  
@@ -366,6 +377,22 @@
       const sendMessage=async(text)=>{
         if(!text.trim())return;
         if(submitted||!ct)return;
+ 
+        // ולידציה ת.ז — אם ההיסטוריה מכילה שאלה על ת.ז והתשובה לא תקינה
+        const lastAssistantMsg = [...history].reverse().find(m => m.role === "assistant");
+        const isAskingForID = lastAssistantMsg && (
+          lastAssistantMsg.content.includes("תעודת זהות") ||
+          lastAssistantMsg.content.includes("ת.ז") ||
+          lastAssistantMsg.content.includes("מספר זהות")
+        );
+        if (isAskingForID && /^\d+$/.test(text.trim()) && !isValidIsraeliID(text.trim())) {
+          setMessages(p=>[...p,
+            {role:"user", content:text},
+            {role:"assistant", content:"⚠️ מספר תעודת הזהות שהזנת אינו תקין.\nתעודת זהות ישראלית חייבת להכיל 9 ספרות תקינות.\nנא להזין שוב את מספר תעודת הזהות של המבוטח:"}
+          ]);
+          setInput("");
+          return;
+        }
         const newHistory=[...history,{role:"user",content:text}];
         setMessages(p=>[...p,{role:"user",content:text}]);
         setInput("");setLoading(true);
