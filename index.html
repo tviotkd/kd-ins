@@ -104,16 +104,29 @@
       return sum % 10 === 0;
     };
  
-    // חילוץ כל שאלות ותשובות מהיסטוריית השיחה
+    // חילוץ שם מלא ות.ז בלבד מהיסטוריית השיחה
     const extractAnswers = (history) => {
       const answers = [];
+      let foundName = false;
+      let foundID = false;
+ 
       for (let i = 0; i < history.length; i++) {
         const msg = history[i];
         if (msg.role === "assistant") {
           const nextUser = history[i + 1];
-          if (nextUser && nextUser.role === "user") {
-            const label = msg.content.replace(/\n/g, " ").slice(0, 100) + (msg.content.length > 100 ? "..." : "");
-            answers.push({ fieldId: "q_" + answers.length, label, value: nextUser.content });
+          if (!nextUser || nextUser.role !== "user") continue;
+          const q = msg.content;
+          const a = nextUser.content;
+ 
+          // זיהוי שם מלא
+          if (!foundName && (q.includes("שם מלא") || q.includes("שמך המלא") || q.includes("מה שמ"))) {
+            answers.push({ fieldId: "full_name", label: "שם מלא", value: a });
+            foundName = true;
+          }
+          // זיהוי ת.ז
+          if (!foundID && (q.includes("תעודת זהות") || q.includes("ת.ז") || q.includes("מספר זהות"))) {
+            answers.push({ fieldId: "id_number", label: "תעודת זהות", value: a });
+            foundID = true;
           }
         }
       }
@@ -436,3 +449,4 @@
   </script>
 </body>
 </html>
+ 
