@@ -104,33 +104,20 @@
       return sum % 10 === 0;
     };
  
-    // חילוץ שם מלא ות.ז בלבד מהיסטוריית השיחה
+    // חילוץ שם מלא ות.ז — זיהוי לפי התשובות עצמן (עובד בכל סוגי התביעות)
     const extractAnswers = (history) => {
-      const answers = [];
-      let foundName = false;
-      let foundID = false;
+      const userMsgs = history.filter(m => m.role === "user").map(m => m.content.trim());
  
-      for (let i = 0; i < history.length; i++) {
-        const msg = history[i];
-        if (msg.role === "assistant") {
-          const nextUser = history[i + 1];
-          if (!nextUser || nextUser.role !== "user") continue;
-          const q = msg.content;
-          const a = nextUser.content;
+      // ת.ז = ההודעה הראשונה של הלקוח שהיא 9 ספרות
+      const idValue = userMsgs.find(v => /^\d{9}$/.test(v.replace(/[\s-]/g, ""))) || "";
  
-          // זיהוי שם מלא
-          if (!foundName && (q.includes("שם מלא") || q.includes("שמך המלא") || q.includes("מה שמ"))) {
-            answers.push({ fieldId: "full_name", label: "שם מלא", value: a });
-            foundName = true;
-          }
-          // זיהוי ת.ז
-          if (!foundID && (q.includes("תעודת זהות") || q.includes("ת.ז") || q.includes("מספר זהות"))) {
-            answers.push({ fieldId: "id_number", label: "תעודת זהות", value: a });
-            foundID = true;
-          }
-        }
-      }
-      return answers;
+      // שם מלא = ההודעה הראשונה של הלקוח שמכילה אותיות (ולא רק מספרים)
+      const nameValue = userMsgs.find(v => /[א-תa-zA-Z]{2,}/.test(v) && !/^[\d\s-]+$/.test(v)) || "";
+ 
+      return [
+        { fieldId: "full_name", label: "שם מלא", value: nameValue },
+        { fieldId: "id_number", label: "תעודת זהות", value: idValue ? idValue.replace(/[\s-]/g, "") : "" }
+      ];
     };
  
     // שליחה ל-Webhook
