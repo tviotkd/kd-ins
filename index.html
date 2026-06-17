@@ -33,7 +33,7 @@
   <script type="text/babel">
     const { useState, useRef, useEffect } = React;
  
-    const COMMON_RULES = "חוקים חשובים:\n- שאל שאלה אחת בכל פעם בלבד\n- אל תחזור על פרטים שהלקוח כבר נתן\n- אל תדרוש מסמכים בשיחה — המסמכים מועלים דרך כפתורי ההעלאה במסך\n- אישור ניהול חשבון בנק או שיק מבוטל — יוזכר פעם אחת בלבד";
+    const COMMON_RULES = "חוקים חשובים:\n- שאל שאלה אחת בכל פעם בלבד — כל הודעה שלך חייבת להכיל שאלה אחת בלבד\n- אל תשלב מידע ושאלה באותה הודעה — קודם תגיב על מה שנאמר, ואז בהודעה נפרדת שאל את השאלה הבאה\n- אל תחזור על פרטים שהלקוח כבר נתן\n- אל תדרוש מסמכים בשיחה — המסמכים מועלים דרך כפתורי ההעלאה במסך\n- אישור ניהול חשבון בנק או שיק מבוטל — יוזכר פעם אחת בלבד";
  
     const CLAIM_DOCS = {
       consultation: ["קבלה", "סיכום ביקור", "אישור ניהול חשבון / שיק מבוטל"],
@@ -57,37 +57,37 @@
         id: "consultation", icon: "🩺", label: "ייעוץ רפואי מומחה", color: "#0ea5e9", light: "#e0f2fe",
         sublabel: "ייעוץ עם רופא מומחה",
         docs: "קבלה + סיכום ביקור + אישור ניהול חשבון / שיק מבוטל",
-        prompt: "אתה עוזר לתביעת ביטוח בריאות בנושא ייעוץ רפואי עם רופא מומחה. דבר בעברית בלבד.\nאנחנו כאן לעזור לך להגיש את תביעתך במהירות ובקלות!\n" + COMMON_RULES + "\nאסוף את הפרטים הבאים בשיחה טבעית ונעימה:\n1. שם מלא\n2. תעודת זהות של המבוטח שעבורו מוגשת התביעה\n3. מספר פוליסה (אם ידוע)\n4. שם הרופא / מומחה שנתן הייעוץ\n5. התמחות הרופא (קרדיולוג, אורתופד וכד')\n6. תאריך הביקור\n7. סכום ששולם\n8. האם הופנה על ידי רופא משפחה? (כן/לא)\nלאחר איסוף הפרטים — הפנה ללחוץ על כפתור העלאת מסמכים במסך.\nבסוף — סכם הכל ובקש אישור. אחרי אישור — כתוב בדיוק: \"✅ התביעה נשלחה!\""
+        prompt: "אתה עוזר לתביעת ביטוח בריאות בנושא ייעוץ רפואי עם רופא מומחה. דבר בעברית בלבד.\n" + COMMON_RULES + "\nאסוף את הפרטים הבאים — שאלה אחת בכל הודעה:\n1. שם מלא\n2. תעודת זהות של המבוטח\n3. מספר פוליסה (אם ידוע)\n4. שם הרופא המומחה\n5. התמחות הרופא\n6. תאריך הביקור\n7. סכום ששולם\n8. האם הופנה על ידי רופא משפחה?\nלאחר כל הפרטים — בקש ללחוץ על כפתור העלאת מסמכים."
       },
       {
         id: "alternative", icon: "🌿", label: "רפואה משלימה ופיזיותרפיה", color: "#22c55e", light: "#dcfce7",
         sublabel: "טיפולים אלטרנטיביים כולל פיזיותרפיה",
         docs: "הפניה לטיפול + תעודת מטפל מוסמך + קבלות + אישור ניהול חשבון / שיק מבוטל",
-        prompt: "אתה עוזר לתביעת ביטוח בריאות בנושא רפואה משלימה ופיזיותרפיה. דבר בעברית בלבד.\nאנחנו כאן לעזור לך להגיש את תביעתך במהירות ובקלות!\n" + COMMON_RULES + "\nאסוף את הפרטים הבאים בשיחה טבעית ונעימה:\n1. שם מלא\n2. תעודת זהות של המבוטח שעבורו מוגשת התביעה\n3. מספר פוליסה (אם ידוע)\n4. סוג הטיפול (דיקור, כירופרקטיקה, נטורופתיה, פיזיותרפיה וכד')\n5. שם המטפל / מרפאה\n6. תאריך הטיפול\n7. מספר הטיפולים (אם סדרה)\n8. סכום כולל ששולם\nחשוב: תשלום יועבר אך ורק לחשבון המבוטח עצמו.\nלאחר איסוף הפרטים — הפנה ללחוץ על כפתור העלאת מסמכים במסך.\nבסוף — סכם הכל ובקש אישור. אחרי אישור — כתוב בדיוק: \"✅ התביעה נשלחה!\""
+        prompt: "אתה עוזר לתביעת ביטוח בריאות בנושא רפואה משלימה ופיזיותרפיה. דבר בעברית בלבד.\n" + COMMON_RULES + "\nאסוף את הפרטים הבאים — שאלה אחת בכל הודעה:\n1. שם מלא\n2. תעודת זהות של המבוטח\n3. מספר פוליסה (אם ידוע)\n4. סוג הטיפול\n5. שם המטפל / מרפאה\n6. תאריך הטיפול\n7. מספר טיפולים\n8. סכום כולל ששולם\nחשוב: תשלום לחשבון המבוטח בלבד.\nלאחר כל הפרטים — בקש ללחוץ על כפתור העלאת מסמכים."
       },
       {
         id: "diagnostic", icon: "🔬", label: "בדיקה אבחנתית", color: "#8b5cf6", light: "#ede9fe",
         sublabel: "MRI, CT, בדיקות הריון ועוד",
         docs: "הפניה לבדיקה + סיכום ביקור רפואי + קבלה + אישור ניהול חשבון / שיק מבוטל",
-        prompt: "אתה עוזר לתביעת ביטוח בריאות בנושא בדיקה אבחנתית. דבר בעברית בלבד.\nאנחנו כאן לעזור לך להגיש את תביעתך במהירות ובקלות!\n" + COMMON_RULES + "\nאסוף את הפרטים הבאים בשיחה טבעית ונעימה:\n1. שם מלא\n2. תעודת זהות של המבוטח שעבורו מוגשת התביעה\n3. מספר פוליסה (אם ידוע)\n4. סוג הבדיקה (MRI, CT, אולטרסאונד, בדיקת דם מיוחדת וכד')\n5. איבר / אזור שנבדק\n6. שם המרכז הרפואי / מעבדה\n7. תאריך הבדיקה\n8. האם יש הפניה רפואית? (חובה לרוב)\n9. סכום ששולם\nלאחר איסוף הפרטים — הפנה ללחוץ על כפתור העלאת מסמכים במסך.\nבסוף — סכם הכל ובקש אישור. אחרי אישור — כתוב בדיוק: \"✅ התביעה נשלחה!\""
+        prompt: "אתה עוזר לתביעת ביטוח בריאות בנושא בדיקה אבחנתית. דבר בעברית בלבד.\n" + COMMON_RULES + "\nאסוף את הפרטים הבאים — שאלה אחת בכל הודעה:\n1. שם מלא\n2. תעודת זהות של המבוטח\n3. מספר פוליסה (אם ידוע)\n4. סוג הבדיקה\n5. איבר / אזור שנבדק\n6. שם המרכז הרפואי\n7. תאריך הבדיקה\n8. האם יש הפניה רפואית?\n9. סכום ששולם\nלאחר כל הפרטים — בקש ללחוץ על כפתור העלאת מסמכים."
       },
       {
         id: "surgery", icon: "🏥", label: "ניתוח בארץ", color: "#ef4444", light: "#fee2e2",
         sublabel: "פוליסות מ-02/2016 בלבד — לפני כן פנה לסוכן",
         docs: "הפניה לניתוח + קבלה ייעוץ טרום ניתוח + אישור ניהול חשבון / שיק מבוטל",
-        prompt: "אתה עוזר לתביעת ביטוח בריאות בנושא ניתוח בארץ. דבר בעברית בלבד. היה חם וסבלני.\nאנחנו כאן לעזור לך להגיש את תביעתך במהירות ובקלות!\n" + COMMON_RULES + "\nכיסוי קיים רק בפוליסות מ-02/2016 ואילך. אם לפני כן — הפנה לסוכן 03-3731410.\nאסוף את הפרטים הבאים בשיחה טבעית ונעימה:\n1. שם מלא\n2. תעודת זהות של המבוטח שעבורו מוגשת התביעה\n3. מספר פוליסה\n4. מתי נרכשה הפוליסה? (לפני או אחרי 02/2016)\n5. שם הניתוח / הפעולה הרפואית\n6. שם בית החולים / המרכז הרפואי\n7. שם המנתח הראשי\n8. תאריך הניתוח\n9. האם ניתוח דחוף או מתוכנן?\n10. ימי אשפוז (אם רלוונטי)\n11. עלות המנתח הפרטי (אם רלוונטי)\n12. עלות הרדמה פרטית (אם רלוונטי)\n13. הוצאות נוספות (תרופות, ציוד וכד')\nלאחר איסוף הפרטים — הפנה ללחוץ על כפתור העלאת מסמכים במסך.\nבסוף — סכם הכל ובקש אישור. אחרי אישור — כתוב בדיוק: \"✅ התביעה נשלחה!\""
+        prompt: "אתה עוזר לתביעת ביטוח בריאות בנושא ניתוח בארץ. דבר בעברית בלבד.\n" + COMMON_RULES + "\nכיסוי קיים רק בפוליסות מ-02/2016 ואילך. לפני כן — הפנה לסוכן 03-3731410.\nאסוף את הפרטים הבאים — שאלה אחת בכל הודעה:\n1. שם מלא\n2. תעודת זהות של המבוטח\n3. מספר פוליסה\n4. מתי נרכשה הפוליסה?\n5. שם הניתוח / הפעולה\n6. שם בית החולים\n7. שם המנתח\n8. תאריך הניתוח\n9. האם דחוף או מתוכנן?\n10. ימי אשפוז\n11. עלות המנתח הפרטי\n12. עלות הרדמה פרטית\n13. הוצאות נוספות\nלאחר כל הפרטים — בקש ללחוץ על כפתור העלאת מסמכים."
       },
       {
         id: "child", icon: "👶", label: "התפתחות הילד", color: "#f59e0b", light: "#fef3c7",
         sublabel: "פסיכולוג, קלינאי, ריפוי בעיסוק, שחייה/רכיבה טיפולית ועוד...",
         docs: "הפניה מרופא מומחה + קבלות + אישור ניהול חשבון / שיק מבוטל",
-        prompt: "אתה עוזר לתביעת ביטוח בריאות בנושא התפתחות הילד. דבר בעברית בלבד. היה חם ומסביר פנים.\nאנחנו כאן לעזור לך להגיש את תביעתך במהירות ובקלות!\n" + COMMON_RULES + "\nהפניה חייבת מ: מומחה התפתחות הילד (ותק 3+ שנים) או נוירולוג ילדים בלבד. אחרת — הפנה לסוכן 03-3731410.\nהטיפולים כוללים: פסיכולוג, קלינאי תקשורת, ריפוי בעיסוק, שחייה טיפולית, רכיבה טיפולית, ייעוצים התפתחותיים.\nאסוף את הפרטים הבאים בשיחה טבעית ונעימה:\n1. שם מלא של ההורה / מגיש התביעה\n2. תעודת זהות של המבוטח (הילד)\n3. מספר פוליסה (אם ידוע)\n4. סוג הטיפול (פסיכולוג, קלינאי תקשורת, ריפוי בעיסוק וכד')\n5. שם המטפל / מרפאה\n6. תאריך תחילת הטיפולים\n7. מספר טיפולים שבוצעו\n8. עלות לטיפול + סה\"כ\n9. פרטי הרופא המפנה (שם + התמחות)\nלאחר איסוף הפרטים — הפנה ללחוץ על כפתור העלאת מסמכים במסך.\nבסוף — סכם הכל ובקש אישור. אחרי אישור — כתוב בדיוק: \"✅ התביעה נשלחה!\""
+        prompt: "אתה עוזר לתביעת ביטוח בריאות בנושא התפתחות הילד. דבר בעברית בלבד.\n" + COMMON_RULES + "\nהפניה חייבת ממומחה התפתחות הילד (ותק 3+ שנים) או נוירולוג ילדים בלבד. אחרת — הפנה לסוכן 03-3731410.\nאסוף את הפרטים הבאים — שאלה אחת בכל הודעה:\n1. שם מלא של ההורה\n2. תעודת זהות של הילד המבוטח\n3. מספר פוליסה (אם ידוע)\n4. סוג הטיפול\n5. שם המטפל / מרפאה\n6. תאריך תחילת הטיפולים\n7. מספר טיפולים\n8. עלות לטיפול וסה\"כ\n9. פרטי הרופא המפנה\nלאחר כל הפרטים — בקש ללחוץ על כפתור העלאת מסמכים."
       },
       {
         id: "accident", icon: "🚑", label: "תאונות אישיות — שברים", color: "#db2777", light: "#fce7f3",
         sublabel: "שברים בלבד — לכל דבר אחר פנה לסוכן",
         docs: "דו\"ח רפואי המציין שבר + אישור ניהול חשבון / שיק מבוטל",
-        prompt: "אתה עוזר לתביעת ביטוח בנושא תאונות אישיות — שברים בלבד. דבר בעברית בלבד. היה חם ואמפתי.\n" + COMMON_RULES + "\nקטגוריה זו לשברים בלבד. פציעה אחרת (חתכים, נקעים, חבלות) — הפנה לסוכן 03-3731410.\nאסוף את הפרטים הבאים בשיחה טבעית ונעימה:\n1. שם מלא\n2. תעודת זהות של המבוטח שעבורו מוגשת התביעה\n3. מספר פוליסה (אם ידוע)\n4. תיאור התאונה — מה קרה?\n5. תאריך ושעת התאונה\n6. מקום התאונה (בית, רחוב, עבודה וכד')\n7. איזה איבר / אזור נשבר?\n8. האם טופל בחדר מיון? באיזה בית חולים?\n9. האם אושפז? כמה ימים?\n10. האם יש ימי אי כושר עבודה? כמה ימים?\n11. האם בוצע ניתוח כתוצאה מהתאונה?\n12. סך כל ההוצאות הרפואיות\nלאחר איסוף הפרטים — הפנה ללחוץ על כפתור העלאת מסמכים במסך.\nבסוף — סכם הכל ובקש אישור. אחרי אישור — כתוב בדיוק: \"✅ התביעה נשלחה!\""
+        prompt: "אתה עוזר לתביעת ביטוח בנושא תאונות אישיות — שברים בלבד. דבר בעברית בלבד.\n" + COMMON_RULES + "\nשברים בלבד. פציעה אחרת — הפנה לסוכן 03-3731410.\nאסוף את הפרטים הבאים — שאלה אחת בכל הודעה:\n1. שם מלא\n2. תעודת זהות של המבוטח\n3. מספר פוליסה (אם ידוע)\n4. תיאור התאונה\n5. תאריך ושעת התאונה\n6. מקום התאונה\n7. איזה איבר נשבר?\n8. האם טופל בחדר מיון? באיזה בית חולים?\n9. האם אושפז? כמה ימים?\n10. ימי אי כושר עבודה?\n11. האם בוצע ניתוח?\n12. סך הוצאות רפואיות\nלאחר כל הפרטים — בקש ללחוץ על כפתור העלאת מסמכים."
       }
     ];
  
@@ -104,20 +104,30 @@
       return sum % 10 === 0;
     };
  
-    // חילוץ שם מלא ות.ז — זיהוי לפי התשובות עצמן (עובד בכל סוגי התביעות)
+    // שמירת היסטוריה ב-sessionStorage
+    const STORAGE_KEY = "kd_chat_history";
+    const saveHistory = (claimId, history) => {
+      try {
+        const all = JSON.parse(sessionStorage.getItem(STORAGE_KEY) || "{}");
+        all[claimId] = history;
+        sessionStorage.setItem(STORAGE_KEY, JSON.stringify(all));
+      } catch(e) {}
+    };
+ 
+    // חילוץ כל שאלות ותשובות מהיסטוריה (לוובהוק)
     const extractAnswers = (history) => {
-      const userMsgs = history.filter(m => m.role === "user").map(m => m.content.trim());
- 
-      // ת.ז = ההודעה הראשונה של הלקוח שהיא 9 ספרות
-      const idValue = userMsgs.find(v => /^\d{9}$/.test(v.replace(/[\s-]/g, ""))) || "";
- 
-      // שם מלא = ההודעה הראשונה של הלקוח שמכילה אותיות (ולא רק מספרים)
-      const nameValue = userMsgs.find(v => /[א-תa-zA-Z]{2,}/.test(v) && !/^[\d\s-]+$/.test(v)) || "";
- 
-      return [
-        { fieldId: "full_name", label: "שם מלא", value: nameValue },
-        { fieldId: "id_number", label: "תעודת זהות", value: idValue ? idValue.replace(/[\s-]/g, "") : "" }
-      ];
+      const answers = [];
+      for (let i = 0; i < history.length; i++) {
+        const msg = history[i];
+        if (msg.role === "assistant") {
+          const nextUser = history[i + 1];
+          if (nextUser && nextUser.role === "user" && !nextUser.content.startsWith("✅")) {
+            const label = msg.content.replace(/\n/g, " ").slice(0, 120) + (msg.content.length > 120 ? "..." : "");
+            answers.push({ fieldId: "q_" + answers.length, label, value: nextUser.content });
+          }
+        }
+      }
+      return answers;
     };
  
     // שליחה ל-Webhook
@@ -277,11 +287,18 @@
  
       useEffect(()=>{bottomRef.current?.scrollIntoView({behavior:"smooth"});},[messages,loading,showUpload]);
  
+      // שמור היסטוריה ב-sessionStorage בכל שינוי
+      useEffect(()=>{ if(ct && history.length > 0) saveHistory(ct.id, history); },[history]);
+ 
       const reset=()=>{ setCt(null);setMessages([]);setHistory([]);setSubmitted(false);setInput("");setShowUpload(false);setUploadedDocs({}); };
  
       const startChat=(type)=>{
         setCt(type);
-        setMessages([{role:"assistant",content:`היי! 👋 אני הרובוט החכם של סוכנות Kaplan & Dahan 🤖\nאני כאן לעזור לך להגיש את תביעתך במהירות ובקלות!\n\nתצטרך:\n• ${type.docs}\n\nנתחיל — מה שמך המלא?`}]);
+        // הודעת פתיחה — רק ברכה ובקשת שם, ללא רשימת מסמכים
+        setMessages([
+          {role:"assistant", content:"היי! 👋 אני הרובוט החכם של סוכנות Kaplan & Dahan 🤖\nאני כאן לעזור לך להגיש את תביעתך במהירות ובקלות!"},
+          {role:"assistant", content:"מה שמך המלא?"}
+        ]);
         setHistory([]);setSubmitted(false);setShowUpload(false);setUploadedDocs({});setInput("");
       };
  
@@ -328,7 +345,8 @@
           const data=await res.json();
           const reply=data.content?.[0]?.text||"מצטער, הייתה שגיאה.";
           setMessages(p=>[...p,{role:"assistant",content:reply}]);
-          setHistory([...newHistory,{role:"assistant",content:reply}]);
+          const updatedHistory = [...newHistory,{role:"assistant",content:reply}];
+          setHistory(updatedHistory);
           if(reply.includes("העלה") || reply.includes("העלאת") || reply.includes("מסמכים") || reply.includes("כפתור")) {
             setShowUpload(true);
           }
@@ -343,13 +361,24 @@
       return(
         <div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",padding:12}}>
           <div style={{width:"100%",maxWidth:660,borderRadius:24,overflow:"hidden",boxShadow:"0 20px 60px rgba(0,0,0,0.13)",display:"flex",flexDirection:"column"}}>
+ 
+            {/* Header */}
             <div style={{background:"#fff",padding:"12px 20px",borderBottom:"1px solid #f1f5f9",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
               <div style={{display:"flex",alignItems:"center",gap:10}}>
-                <div style={{width:40,height:40,borderRadius:10,background:"#1e293b",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:18,fontWeight:800}}>KD</div>
+                {/* לוגו — Google Drive */}
+                <img
+                  src="https://drive.google.com/thumbnail?id=1RK62SzV7NeV0ke0qqFf_1vGmEbpCC4b-&sz=w80"
+                  alt="KD Logo"
+                  style={{width:40,height:40,borderRadius:10,objectFit:"contain",background:"#f8fafc"}}
+                  onError={e=>{e.target.style.display="none";e.target.nextSibling.style.display="flex";}}
+                />
+                <div style={{width:40,height:40,borderRadius:10,background:"#1e293b",display:"none",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:18,fontWeight:800}}>KD</div>
                 <div><div style={{fontSize:14,fontWeight:800,color:"#1e293b"}}>KAPLAN & DAHAN</div><div style={{fontSize:11,color:"#94a3b8"}}>פירמת ביטוח ופיננסים</div></div>
               </div>
               <a href="tel:03-3731410" style={{display:"flex",alignItems:"center",gap:6,background:ct?accent:"#1e293b",color:"#fff",borderRadius:20,padding:"7px 14px",textDecoration:"none",fontSize:13,fontWeight:700,fontFamily:"'Heebo',sans-serif",transition:"background 0.3s"}}>📞 03-3731410</a>
             </div>
+ 
+            {/* Sub header */}
             <div style={{background:ct?accent:"#1e293b",padding:"11px 20px",display:"flex",alignItems:"center",justifyContent:"space-between",transition:"background 0.4s"}}>
               <div style={{display:"flex",alignItems:"center",gap:10}}>
                 <div style={{width:34,height:34,borderRadius:"50%",background:"rgba(255,255,255,0.2)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}>{ct?ct.icon:"🏥"}</div>
@@ -357,6 +386,7 @@
               </div>
               {ct&&<button onClick={reset} style={{background:"rgba(255,255,255,0.18)",border:"none",color:"#fff",borderRadius:20,padding:"5px 13px",cursor:"pointer",fontSize:12,fontFamily:"'Heebo',sans-serif"}}>← חזור</button>}
             </div>
+ 
             {!ct?(
               <div style={{background:"#fff",padding:"24px 20px"}}>
                 <div style={{textAlign:"center",marginBottom:22}}><div style={{fontSize:20,fontWeight:800,color:"#1e293b",marginBottom:4}}>איזה סוג תביעה תרצה להגיש?</div><div style={{fontSize:13.5,color:"#64748b"}}>בחר קטגוריה ונתחיל</div></div>
@@ -381,6 +411,7 @@
               </div>
             ):(
               <>
+                {/* Messages */}
                 <div style={{background:"#f8fafc",padding:"18px 16px 10px",overflowY:"auto",minHeight:280,maxHeight:380,display:"flex",flexDirection:"column",gap:12}}>
                   {messages.map((m,i)=>(
                     <div key={i} style={{display:"flex",flexDirection:m.role==="user"?"row":"row-reverse",alignItems:"flex-end",gap:8,animation:"popIn 0.22s ease"}}>
@@ -403,17 +434,14 @@
                   )}
                   <div ref={bottomRef}/>
                 </div>
-                {showUpload&&!submitted&&(
+ 
+                {/* Upload Panel — מוצג רק כשהגיעו לשלב המסמכים */}
+                {showUpload && !submitted && (
                   <DocUploadPanel claimId={ct.id} accent={accent} uploadedDocs={uploadedDocs} onFileChange={handleFileChange} onAllUploaded={handleAllUploaded} />
                 )}
-                {!showUpload&&!submitted&&(
-                  <div style={{background:"#fff",borderTop:"1px solid #f1f5f9",padding:"8px 14px",textAlign:"center"}}>
-                    <button onClick={()=>setShowUpload(true)} style={{background:light,color:accent,border:`1px solid ${accent}33`,borderRadius:20,padding:"6px 16px",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"'Heebo',sans-serif"}}>
-                      📎 העלה מסמכים
-                    </button>
-                  </div>
-                )}
-                {!submitted&&(
+ 
+                {/* Input */}
+                {!submitted && (
                   <div style={{background:"#fff",borderTop:"1px solid #f1f5f9",padding:"12px 14px",display:"flex",gap:8,alignItems:"flex-end"}}>
                     <textarea value={input} onChange={e=>setInput(e.target.value)}
                       onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendMessage(input);}}}
