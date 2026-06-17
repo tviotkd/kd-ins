@@ -106,7 +106,7 @@
     </div>
     <a id="phone-btn" href="tel:03-3731410">📞 03-3731410</a>
   </div>
- 
+
   <!-- Subheader -->
   <div id="subheader">
     <div style="display:flex;align-items:center;gap:10px;">
@@ -118,10 +118,10 @@
     </div>
     <button id="back-btn" onclick="resetApp()">← חזור</button>
   </div>
- 
+
   <!-- Claim selector -->
   <div id="selector"></div>
- 
+
   <!-- Chat -->
   <div id="chat-area">
     <div id="messages"></div>
@@ -151,14 +151,14 @@
     <div id="chat-footer">🔒 מאובטח · PDF, תמונות ו-Word מתקבלים</div>
   </div>
 </div>
- 
+
 <script>
 const WEBHOOK_URL = "https://hook.eu1.make.com/y1kwo7yb6r2xxvt81m1er9cj2586qa3l";
 const WORKER_URL  = "https://kd-chat.tviot.workers.dev";
 const MAX_SIZE    = 5 * 1024 * 1024;
- 
-const COMMON_RULES = "חוקים חשובים:\n- שאל שאלה אחת בכל פעם בלבד\n- כל הודעה = שאלה אחת בלבד, ללא הקדמה\n- אל תחזור על פרטים שהלקוח כבר נתן\n- אל תדרוש מסמכים בשיחה - המסמכים מועלים דרך כפתורי ההעלאה במסך\n- אישור ניהול חשבון בנק יוזכר פעם אחת בלבד";
- 
+
+const COMMON_RULES = "חוקים חשובים:\n- שאל שאלה אחת בכל פעם בלבד\n- כל הודעה = שאלה אחת בלבד, ללא הקדמה\n- אל תחזור על פרטים שהלקוח כבר נתן\n- אל תדרוש מסמכים בשיחה - המסמכים מועלים דרך כפתורי ההעלאה במסך\n- אישור ניהול חשבון בנק יוזכר פעם אחת בלבד\n- מספר פוליסה אינו חובה. אם הלקוח לא זוכר - הסבר שניתן למצוא אותו במסמכי הפוליסה שקיבל מהסוכן, בדוא\"ל, או להתקשר למשרד 03-3731410. ניתן להמשיך גם ללא מספר פוליסה";
+
 const CLAIM_DOCS = {
   consultation: ["קבלה","סיכום ביקור","אישור ניהול חשבון / שיק מבוטל"],
   alternative:  ["הפניה לטיפול","תעודת מטפל מוסמך","קבלות","אישור ניהול חשבון / שיק מבוטל"],
@@ -167,41 +167,41 @@ const CLAIM_DOCS = {
   child:        ["הפניה מרופא מומחה","קבלות","אישור ניהול חשבון / שיק מבוטל"],
   accident:     ["דוח רפואי המציין שבר","אישור ניהול חשבון / שיק מבוטל"]
 };
- 
+
 const DOC_ICONS = {
   "קבלה":"🧾","קבלות":"🧾","סיכום ביקור":"📋","סיכום ביקור רפואי":"📋",
   "הפניה לטיפול":"📝","הפניה לבדיקה":"📝","הפניה לניתוח":"📝","הפניה מרופא מומחה":"📝",
   "תעודת מטפל מוסמך":"🎓","קבלה ייעוץ טרום ניתוח":"🧾",
   "אישור ניהול חשבון / שיק מבוטל":"🏦","דוח רפואי המציין שבר":"🦴"
 };
- 
+
 const CLAIM_TYPES = [
   {id:"consultation",icon:"🩺",label:"ייעוץ רפואי מומחה",color:"#0ea5e9",light:"#e0f2fe",
    sublabel:"ייעוץ עם רופא מומחה",docs:"קבלה + סיכום ביקור + אישור ניהול חשבון",
-   prompt:"אתה עוזר לתביעת ביטוח בריאות - ייעוץ רפואי מומחה. עברית בלבד.\n"+COMMON_RULES+"\nאסוף בשאלות נפרדות:\n1.שם מלא\n2.תעודת זהות\n3.מספר פוליסה\n4.שם הרופא המומחה\n5.התמחות\n6.תאריך ביקור\n7.סכום ששולם\n8.האם היתה הפניה מרופא משפחה\nאחרי כל הפרטים - בקש ללחוץ על כפתור העלאת מסמכים."},
+   prompt:"אתה עוזר לתביעת ביטוח בריאות - ייעוץ רפואי מומחה. עברית בלבד. היה חם וידידותי.\n"+COMMON_RULES+"\nאסוף בשאלות נפרדות עם דוגמאות:\n1. שם מלא של המבוטח\n2. מספר תעודת זהות (9 ספרות)\n3. מספר פוליסה (אם ידוע, אפשר לדלג)\n4. שם הרופא המומחה (לדוגמה: ד\"ר כהן דוד)\n5. התמחות הרופא (לדוגמה: קרדיולוג, אורתופד, נוירולוג, עיניים)\n6. תאריך הביקור (DD/MM/YYYY)\n7. הסכום ששולם בשקלים\n8. האם היתה הפניה מרופא משפחה? (כן/לא)\nאחרי כל הפרטים - בקש ללחוץ על כפתור העלאת מסמכים."},
   {id:"alternative",icon:"🌿",label:"רפואה משלימה ופיזיותרפיה",color:"#22c55e",light:"#dcfce7",
    sublabel:"טיפולים אלטרנטיביים כולל פיזיותרפיה",docs:"הפניה לטיפול + תעודת מטפל + קבלות + אישור ניהול חשבון",
-   prompt:"אתה עוזר לתביעת ביטוח בריאות - רפואה משלימה. עברית בלבד.\n"+COMMON_RULES+"\nאסוף בשאלות נפרדות:\n1.שם מלא\n2.תעודת זהות\n3.מספר פוליסה\n4.סוג הטיפול\n5.שם המטפל\n6.תאריך הטיפול\n7.מספר טיפולים\n8.סכום כולל ששולם\nחשוב: תשלום לחשבון המבוטח בלבד.\nאחרי כל הפרטים - בקש ללחוץ על כפתור העלאת מסמכים."},
+   prompt:"אתה עוזר לתביעת ביטוח בריאות - רפואה משלימה ופיזיותרפיה. עברית בלבד. היה חם וידידותי.\n"+COMMON_RULES+"\nאסוף בשאלות נפרדות עם דוגמאות:\n1. שם מלא של המבוטח\n2. מספר תעודת זהות (9 ספרות)\n3. מספר פוליסה (אם ידוע, אפשר לדלג)\n4. סוג הטיפול (לדוגמה: פיזיותרפיה, דיקור סיני, כירופרקטיקה, נטורופתיה, רפלקסולוגיה)\n5. שם המטפל או שם המרפאה\n6. תאריך הטיפול או תקופת הטיפולים\n7. מספר הטיפולים שבוצעו\n8. הסכום הכולל ששולם בשקלים\nחשוב לציין: התשלום יועבר אך ורק לחשבון הבנק של המבוטח.\nאחרי כל הפרטים - בקש ללחוץ על כפתור העלאת מסמכים."},
   {id:"diagnostic",icon:"🔬",label:"בדיקה אבחנתית",color:"#8b5cf6",light:"#ede9fe",
    sublabel:"MRI, CT, בדיקות הריון ועוד",docs:"הפניה לבדיקה + סיכום ביקור + קבלה + אישור ניהול חשבון",
-   prompt:"אתה עוזר לתביעת ביטוח בריאות - בדיקה אבחנתית. עברית בלבד.\n"+COMMON_RULES+"\nאסוף בשאלות נפרדות:\n1.שם מלא\n2.תעודת זהות\n3.מספר פוליסה\n4.סוג הבדיקה\n5.איבר שנבדק\n6.שם המרכז הרפואי\n7.תאריך הבדיקה\n8.האם יש הפניה רפואית\n9.סכום ששולם\nאחרי כל הפרטים - בקש ללחוץ על כפתור העלאת מסמכים."},
+   prompt:"אתה עוזר לתביעת ביטוח בריאות - בדיקה אבחנתית. עברית בלבד. היה חם וידידותי.\n"+COMMON_RULES+"\nאסוף בשאלות נפרדות עם דוגמאות:\n1. שם מלא של המבוטח\n2. מספר תעודת זהות (9 ספרות)\n3. מספר פוליסה (אם ידוע, אפשר לדלג)\n4. סוג הבדיקה (לדוגמה: MRI, CT, אולטרסאונד, אקו לב, מיפוי עצמות, בדיקת הריון)\n5. האיבר או האזור שנבדק (לדוגמה: ברך ימין, מוח, בטן)\n6. שם המרכז הרפואי או המעבדה\n7. תאריך הבדיקה (DD/MM/YYYY)\n8. האם יש הפניה רפואית לבדיקה? (כן/לא)\n9. הסכום ששולם בשקלים\nאחרי כל הפרטים - בקש ללחוץ על כפתור העלאת מסמכים."},
   {id:"surgery",icon:"🏥",label:"ניתוח בארץ",color:"#ef4444",light:"#fee2e2",
    sublabel:"פוליסות מ-02/2016 בלבד — לפני כן פנה לסוכן",docs:"הפניה לניתוח + קבלה טרום ניתוח + אישור ניהול חשבון",
-   prompt:"אתה עוזר לתביעת ביטוח בריאות - ניתוח בארץ. עברית בלבד.\n"+COMMON_RULES+"\nכיסוי רק מ-02/2016 ואילך. לפני כן - הפנה לסוכן 03-3731410.\nאסוף בשאלות נפרדות:\n1.שם מלא\n2.תעודת זהות\n3.מספר פוליסה\n4.מתי נרכשה הפוליסה\n5.שם הניתוח\n6.שם בית החולים\n7.שם המנתח\n8.תאריך הניתוח\n9.האם דחוף או מתוכנן\n10.ימי אשפוז\n11.עלות מנתח פרטי\n12.עלות הרדמה פרטית\n13.הוצאות נוספות\nאחרי כל הפרטים - בקש ללחוץ על כפתור העלאת מסמכים."},
+   prompt:"אתה עוזר לתביעת ביטוח בריאות - ניתוח בארץ. עברית בלבד. היה חם וסבלני.\n"+COMMON_RULES+"\nכיסוי קיים רק בפוליסות מ-02/2016 ואילך. אם לפני כן - הפנה בנועם לסוכן 03-3731410.\nאסוף בשאלות נפרדות עם דוגמאות:\n1. שם מלא של המבוטח\n2. מספר תעודת זהות (9 ספרות)\n3. מספר פוליסה\n4. מתי נרכשה הפוליסה? (חודש ושנה)\n5. שם הניתוח או הפעולה הרפואית (לדוגמה: ניתוח קטרקט, ניתוח מניסקוס, כריתת תוספתן)\n6. שם בית החולים (לדוגמה: איכילוב, הדסה, שיבא)\n7. שם המנתח הראשי\n8. תאריך הניתוח (DD/MM/YYYY)\n9. האם הניתוח היה דחוף או מתוכנן?\n10. כמה ימי אשפוז? (אם רלוונטי)\n11. עלות המנתח הפרטי בשקלים (אם שולם)\n12. עלות ההרדמה הפרטית בשקלים (אם שולם)\n13. הוצאות נוספות (תרופות, ציוד רפואי וכדומה)\nאחרי כל הפרטים - בקש ללחוץ על כפתור העלאת מסמכים."},
   {id:"child",icon:"👶",label:"התפתחות הילד",color:"#f59e0b",light:"#fef3c7",
    sublabel:"פסיכולוג, קלינאי, ריפוי בעיסוק, שחייה/רכיבה טיפולית ועוד",docs:"הפניה מרופא מומחה + קבלות + אישור ניהול חשבון",
-   prompt:"אתה עוזר לתביעת ביטוח בריאות - התפתחות הילד. עברית בלבד.\n"+COMMON_RULES+"\nהפניה חייבת ממומחה התפתחות (ותק 3+) או נוירולוג ילדים. אחרת - 03-3731410.\nאסוף בשאלות נפרדות:\n1.שם מלא של ההורה\n2.תעודת זהות של הילד המבוטח\n3.מספר פוליסה\n4.סוג הטיפול\n5.שם המטפל\n6.תאריך תחילת טיפולים\n7.מספר טיפולים\n8.עלות לטיפול וסהכ\n9.פרטי הרופא המפנה\nאחרי כל הפרטים - בקש ללחוץ על כפתור העלאת מסמכים."},
+   prompt:"אתה עוזר לתביעת ביטוח בריאות - התפתחות הילד. עברית בלבד. היה חם ואמפתי.\n"+COMMON_RULES+"\nהפניה חייבת להיות ממומחה התפתחות הילד (ותק 3 שנים ומעלה) או נוירולוג ילדים בלבד. כל הפניה אחרת - הפנה לסוכן 03-3731410.\nהטיפולים הכשירים: פסיכולוג, קלינאי תקשורת, ריפוי בעיסוק, פיזיותרפיה התפתחותית, שחייה טיפולית, רכיבה טיפולית.\nאסוף בשאלות נפרדות עם דוגמאות:\n1. שם מלא של ההורה המגיש\n2. מספר תעודת זהות של הילד המבוטח (9 ספרות)\n3. מספר פוליסה (אם ידוע)\n4. סוג הטיפול (לדוגמה: קלינאי תקשורת, ריפוי בעיסוק, פסיכולוג)\n5. שם המטפל או שם המרפאה\n6. תאריך תחילת הטיפולים\n7. כמה טיפולים בוצעו עד כה?\n8. מה עלות טיפול בודד, וכמה שולם בסך הכל?\n9. פרטי הרופא המפנה - שם ותחום התמחות (לדוגמה: ד\"ר לוי, נוירולוג ילדים)\nאחרי כל הפרטים - בקש ללחוץ על כפתור העלאת מסמכים."},
   {id:"accident",icon:"🚑",label:"תאונות אישיות — שברים",color:"#db2877",light:"#fce7f3",
    sublabel:"שברים בלבד — לכל דבר אחר פנה לסוכן",docs:"דוח רפואי המציין שבר + אישור ניהול חשבון",
-   prompt:"אתה עוזר לתביעת ביטוח - תאונות אישיות, שברים בלבד. עברית בלבד.\n"+COMMON_RULES+"\nשברים בלבד. פציעה אחרת - 03-3731410.\nאסוף בשאלות נפרדות:\n1.שם מלא\n2.תעודת זהות\n3.מספר פוליסה\n4.תיאור התאונה\n5.תאריך ושעה\n6.מקום התאונה\n7.איזה איבר נשבר\n8.האם טופל בחדר מיון ובאיזה בית חולים\n9.האם אושפז וכמה ימים\n10.ימי אי כושר עבודה\n11.האם בוצע ניתוח\n12.סך הוצאות רפואיות\nאחרי כל הפרטים - בקש ללחוץ על כפתור העלאת מסמכים."}
+   prompt:"אתה עוזר לתביעת ביטוח - תאונות אישיות, שברים בלבד. עברית בלבד. היה חם ואמפתי - מדובר בפציעה.\n"+COMMON_RULES+"\nקטגוריה זו מכסה שברים בלבד. נקע, חתך, חבלה או כל פציעה אחרת - הפנה בנועם לסוכן 03-3731410.\nאסוף בשאלות נפרדות עם דוגמאות:\n1. שם מלא של המבוטח\n2. מספר תעודת זהות (9 ספרות)\n3. מספר פוליסה (אם ידוע)\n4. תיאור קצר של התאונה - מה קרה?\n5. תאריך ושעת התאונה\n6. מקום התאונה (לדוגמה: בבית, ברחוב, בעבודה, במגרש ספורט)\n7. איזה איבר נשבר ואיפה? (לדוגמה: שבר בשורש כף יד שמאל, שבר בקרסול ימין)\n8. האם טופל בחדר מיון? ואם כן - באיזה בית חולים?\n9. האם אושפז? ואם כן - כמה ימים?\n10. כמה ימי אי כושר עבודה נקבעו?\n11. האם בוצע ניתוח כתוצאה מהשבר?\n12. מה הסכום הכולל של ההוצאות הרפואיות?\nאחרי כל הפרטים - בקש ללחוץ על כפתור העלאת מסמכים."}
 ];
- 
+
 // --- State ---
 let currentClaim = null;
 let chatHistory  = []; // [{role,content}]
 let uploadedDocs = {}; // {docName: File}
 let submitted    = false;
- 
+
 // --- ולידציה ת.ז ---
 function isValidID(id) {
   var s = String(id).trim().replace(/\s/g,"");
@@ -210,7 +210,7 @@ function isValidID(id) {
   for(var i=0;i<9;i++){var d=parseInt(s[i])*((i%2)+1);if(d>9)d-=9;sum+=d;}
   return sum%10===0;
 }
- 
+
 // --- חילוץ שאלות ותשובות מהיסטוריה ---
 function extractAnswers() {
   var answers = [];
@@ -225,7 +225,7 @@ function extractAnswers() {
   }
   return answers;
 }
- 
+
 // --- Base64 ---
 function fileToBase64(file) {
   return new Promise(function(res,rej){
@@ -235,7 +235,7 @@ function fileToBase64(file) {
     r.readAsDataURL(file);
   });
 }
- 
+
 // --- Webhook ---
 async function sendToWebhook() {
   var documents = await Promise.all(
@@ -256,7 +256,7 @@ async function sendToWebhook() {
     await fetch(WEBHOOK_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
   } catch(err){console.warn("Webhook error:",err);}
 }
- 
+
 // --- Build selector ---
 function buildSelector() {
   var sel = document.getElementById("selector");
@@ -282,14 +282,14 @@ function buildSelector() {
     '<div style="font-size:17px;font-weight:800">03-3731410</div></div></a>';
   sel.insertAdjacentHTML("beforeend", footer);
 }
- 
+
 // --- Start chat ---
 function startChat(type) {
   currentClaim = type;
   chatHistory  = [];
   uploadedDocs = {};
   submitted    = false;
- 
+
   // UI
   document.getElementById("selector").style.display    = "none";
   document.getElementById("chat-area").style.display   = "flex";
@@ -300,33 +300,33 @@ function startChat(type) {
   document.getElementById("success-box").style.display  = "none";
   document.getElementById("back-btn").style.display     = "inline-block";
   document.getElementById("messages").innerHTML = "";
- 
+
   // subheader
   document.getElementById("subheader").style.background = type.color;
   document.getElementById("sub-icon").textContent  = type.icon;
   document.getElementById("sub-title").textContent = "תביעת "+type.label;
   document.getElementById("sub-status").textContent = "🟢 פעיל";
   document.getElementById("phone-btn").style.background = type.color;
- 
+
   // progress bar color
   document.getElementById("progress-bar").style.background = type.color;
   document.getElementById("submit-docs-btn").style.background = "linear-gradient(135deg,"+type.color+","+type.color+"dd)";
   document.getElementById("submit-docs-btn").style.boxShadow = "0 6px 20px "+type.color+"55";
- 
+
   // input border focus color via CSS var
   document.getElementById("msg-input").style.setProperty ? "" : "";
   document.getElementById("msg-input").addEventListener("focus",function(){this.style.borderColor=type.color;});
   document.getElementById("msg-input").addEventListener("blur",function(){this.style.borderColor="#e2e8f0";});
- 
+
   // Send-btn color
   document.getElementById("send-btn").style.background = type.color;
   document.getElementById("send-btn").style.color = "#fff";
- 
+
   // Opening messages
   addBotMessage("היי! 👋 אני הרובוט החכם של סוכנות Kaplan & Dahan 🤖\nאני כאן לעזור לך להגיש את תביעתך במהירות ובקלות!");
   addBotMessage("מה שמך המלא?");
 }
- 
+
 // --- Add messages to UI ---
 function addBotMessage(text) {
   var row = document.createElement("div");
@@ -337,7 +337,7 @@ function addBotMessage(text) {
   document.getElementById("messages").appendChild(row);
   scrollBottom();
 }
- 
+
 function addUserMessage(text) {
   var row = document.createElement("div");
   row.className = "msg-row user";
@@ -347,7 +347,7 @@ function addUserMessage(text) {
   document.getElementById("messages").appendChild(row);
   scrollBottom();
 }
- 
+
 function showTyping() {
   var row = document.createElement("div");
   row.className = "msg-row bot"; row.id = "typing-row";
@@ -362,28 +362,28 @@ function showTyping() {
   document.getElementById("messages").appendChild(row);
   scrollBottom();
 }
- 
+
 function hideTyping() {
   var t = document.getElementById("typing-row");
   if (t) t.remove();
 }
- 
+
 function scrollBottom() {
   var m = document.getElementById("messages");
   m.scrollTop = m.scrollHeight;
 }
- 
+
 function escHtml(s) {
   return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\n/g,"<br>");
 }
- 
+
 // --- Send message ---
 async function sendMessage() {
   if (submitted) return;
   var input = document.getElementById("msg-input");
   var text  = input.value.trim();
   if (!text) return;
- 
+
   // ולידציה ת.ז
   var lastBot = chatHistory.slice().reverse().find(function(m){return m.role==="assistant";});
   if (lastBot && (lastBot.content.includes("תעודת זהות")||lastBot.content.includes("ת.ז")||lastBot.content.includes("מספר זהות"))) {
@@ -394,13 +394,13 @@ async function sendMessage() {
       return;
     }
   }
- 
+
   addUserMessage(text);
   chatHistory.push({role:"user",content:text});
   input.value = "";
   setInputEnabled(false);
   showTyping();
- 
+
   try {
     var res  = await fetch(WORKER_URL,{method:"POST",headers:{"Content-Type":"application/json"},
       body:JSON.stringify({model:"claude-sonnet-4-5",max_tokens:1000,system:currentClaim.prompt,messages:chatHistory})});
@@ -409,7 +409,7 @@ async function sendMessage() {
     hideTyping();
     addBotMessage(reply);
     chatHistory.push({role:"assistant",content:reply});
- 
+
     // הצג פאנל מסמכים כשהבוט מפנה אליו
     if (reply.includes("מסמכים")||reply.includes("כפתור")||reply.includes("העלאת")||reply.includes("העלה")) {
       showUploadPanel();
@@ -420,7 +420,7 @@ async function sendMessage() {
   }
   setInputEnabled(true);
 }
- 
+
 function setInputEnabled(on) {
   document.getElementById("msg-input").disabled = !on;
   document.getElementById("send-btn").disabled  = !on;
@@ -428,7 +428,7 @@ function setInputEnabled(on) {
   document.getElementById("send-btn").style.color = on ? "#fff" : "#94a3b8";
   document.getElementById("sub-status").textContent = on ? "🟢 פעיל" : "✍️ מקליד...";
 }
- 
+
 // --- Upload panel ---
 function showUploadPanel() {
   var panel = document.getElementById("upload-panel");
@@ -436,7 +436,7 @@ function showUploadPanel() {
   buildDocCards();
   updateUploadUI();
 }
- 
+
 function buildDocCards() {
   var docs = CLAIM_DOCS[currentClaim.id]||[];
   var container = document.getElementById("doc-cards");
@@ -451,7 +451,7 @@ function buildDocCards() {
     setupFileInput(card, docName);
   });
 }
- 
+
 function buildCardHTML(docName, file) {
   var icon = DOC_ICONS[docName]||"📄";
   var accent = currentClaim.color;
@@ -483,9 +483,9 @@ function buildCardHTML(docName, file) {
       '<input type="file" id="input-'+docName+'" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" style="display:none" onchange="handleFileSelect(this,\''+docName+'\')">';
   }
 }
- 
+
 function triggerInput(id) { var el=document.getElementById(id); if(el) el.click(); }
- 
+
 function handleFileSelect(input, docName) {
   var file = input.files[0];
   if (!file) return;
@@ -501,7 +501,7 @@ function handleFileSelect(input, docName) {
   setupFileInput(card, docName);
   updateUploadUI();
 }
- 
+
 function replaceDoc(docName) {
   delete uploadedDocs[docName];
   var card = document.getElementById("card-"+docName);
@@ -511,7 +511,7 @@ function replaceDoc(docName) {
   setupFileInput(card, docName);
   updateUploadUI();
 }
- 
+
 function setupDropZone(card, docName) {
   var zone = card.querySelector(".upload-zone");
   if (!zone) return;
@@ -528,58 +528,58 @@ function setupDropZone(card, docName) {
     setupFileInput(c,docName); updateUploadUI();
   });
 }
- 
+
 function setupFileInput(card, docName) {
   var inp = card.querySelector("input[type=file]");
   if (!inp) return;
   inp.addEventListener("change",function(){handleFileSelect(inp,docName);});
 }
- 
+
 function updateUploadUI() {
   var docs = CLAIM_DOCS[currentClaim.id]||[];
   var count = docs.filter(function(d){return uploadedDocs[d];}).length;
   var all   = count===docs.length;
   var hasOne = count>0;
- 
+
   document.getElementById("upload-count").textContent = count+"/"+docs.length+" הועלו"+(all?" ✅":"");
   document.getElementById("upload-count").style.color = all?"#15803d":"#64748b";
   document.getElementById("progress-bar").style.width = ((count/docs.length)*100)+"%";
- 
+
   document.getElementById("submit-docs-btn").style.display = hasOne?"block":"none";
   document.getElementById("upload-warning").style.display  = (hasOne&&!all)?"block":"none";
   document.getElementById("upload-hint").style.display     = (hasOne&&all)?"block":"none";
   document.getElementById("upload-no-docs").style.display  = hasOne?"none":"block";
 }
- 
+
 // --- Submit docs ---
 async function submitDocs() {
   if (Object.keys(uploadedDocs).length===0) return;
   submitted = true;
- 
+
   // שלח webhook
   sendToWebhook();
- 
+
   var missingDocs = (CLAIM_DOCS[currentClaim.id]||[]).filter(function(d){return !uploadedDocs[d];});
   addUserMessage("✅ שלחתי את המסמכים");
   document.getElementById("upload-panel").style.display = "none";
   document.getElementById("input-area").style.display   = "none";
- 
+
   var successMsg = missingDocs.length>0
     ? "✅ התביעה נשלחה!\n\nהמסמכים שהעלית התקבלו ועברו לטיפול.\n\n⚠️ המסמכים הבאים חסרים:\n"+missingDocs.map(function(d){return "• "+d;}).join("\n")+"\n\nנציג יצור איתך קשר בהקדם. לשאלות: 03-3731410"
     : "✅ התביעה נשלחה בהצלחה!\n\nכל המסמכים התקבלו ועברו לבדיקה.\nנעדכן אותך בהקדם 😊\n\nלשאלות: 03-3731410";
- 
+
   addBotMessage(successMsg);
   document.getElementById("success-box").style.display = "block";
   scrollBottom();
 }
- 
+
 // --- Reset ---
 function resetApp() {
   currentClaim = null;
   chatHistory  = [];
   uploadedDocs = {};
   submitted    = false;
- 
+
   document.getElementById("selector").style.display    = "block";
   document.getElementById("chat-area").style.display   = "none";
   document.getElementById("upload-panel").style.display = "none";
@@ -588,19 +588,19 @@ function resetApp() {
   document.getElementById("chat-footer").style.display  = "none";
   document.getElementById("back-btn").style.display     = "none";
   document.getElementById("messages").innerHTML          = "";
- 
+
   document.getElementById("subheader").style.background  = "#1e293b";
   document.getElementById("sub-icon").textContent         = "🏥";
   document.getElementById("sub-title").textContent        = "מערכת תביעות ביטוח בריאות";
   document.getElementById("sub-status").textContent       = "בחר סוג תביעה להתחלה";
   document.getElementById("phone-btn").style.background   = "#1e293b";
 }
- 
+
 // --- Enter to send ---
 document.getElementById("msg-input").addEventListener("keydown", function(ev) {
   if (ev.key==="Enter"&&!ev.shiftKey) { ev.preventDefault(); sendMessage(); }
 });
- 
+
 // --- Init ---
 buildSelector();
 </script>
