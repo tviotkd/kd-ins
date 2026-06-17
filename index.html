@@ -6,7 +6,6 @@
   <title>הגשת תביעה - Kaplan & Dahan</title>
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -30,437 +29,342 @@
 </head>
 <body>
   <div id="root"></div>
-  <script type="text/babel">
-    const { useState, useRef, useEffect } = React;
- 
-    const COMMON_RULES = "חוקים חשובים:\n- שאל שאלה אחת בכל פעם בלבד — כל הודעה שלך חייבת להכיל שאלה אחת בלבד\n- אל תשלב מידע ושאלה באותה הודעה — קודם תגיב על מה שנאמר, ואז בהודעה נפרדת שאל את השאלה הבאה\n- אל תחזור על פרטים שהלקוח כבר נתן\n- אל תדרוש מסמכים בשיחה — המסמכים מועלים דרך כפתורי ההעלאה במסך\n- אישור ניהול חשבון בנק או שיק מבוטל — יוזכר פעם אחת בלבד";
- 
-    const CLAIM_DOCS = {
-      consultation: ["קבלה", "סיכום ביקור", "אישור ניהול חשבון / שיק מבוטל"],
-      alternative: ["הפניה לטיפול", "תעודת מטפל מוסמך", "קבלות", "אישור ניהול חשבון / שיק מבוטל"],
-      diagnostic: ["הפניה לבדיקה", "סיכום ביקור רפואי", "קבלה", "אישור ניהול חשבון / שיק מבוטל"],
-      surgery: ["הפניה לניתוח", "קבלה ייעוץ טרום ניתוח", "אישור ניהול חשבון / שיק מבוטל"],
-      child: ["הפניה מרופא מומחה", "קבלות", "אישור ניהול חשבון / שיק מבוטל"],
-      accident: ["דו\"ח רפואי המציין שבר", "אישור ניהול חשבון / שיק מבוטל"]
-    };
- 
-    const DOC_ICONS = {
-      "קבלה": "🧾", "קבלות": "🧾", "סיכום ביקור": "📋", "סיכום ביקור רפואי": "📋",
-      "הפניה לטיפול": "📝", "הפניה לבדיקה": "📝", "הפניה לניתוח": "📝", "הפניה מרופא מומחה": "📝",
-      "תעודת מטפל מוסמך": "🎓", "קבלה ייעוץ טרום ניתוח": "🧾",
-      "אישור ניהול חשבון / שיק מבוטל": "🏦",
-      "דו\"ח רפואי המציין שבר": "🦴"
-    };
- 
-    const CLAIM_TYPES = [
-      {
+  <script>
+const { useState, useRef, useEffect } = React;
+const COMMON_RULES = "חוקים חשובים:\n- שאל שאלה אחת בכל פעם בלבד\n- אל תחזור על פרטים שהלקוח כבר נתן\n- אל תדרוש מסמכים בשיחה — המסמכים מועלים דרך כפתורי ההעלאה במסך\n- אישור ניהול חשבון בנק או שיק מבוטל — יוזכר פעם אחת בלבד";
+const CLAIM_DOCS = {
+    consultation: ["קבלה", "סיכום ביקור", "אישור ניהול חשבון / שיק מבוטל"],
+    alternative: ["הפניה לטיפול", "תעודת מטפל מוסמך", "קבלות", "אישור ניהול חשבון / שיק מבוטל"],
+    diagnostic: ["הפניה לבדיקה", "סיכום ביקור רפואי", "קבלה", "אישור ניהול חשבון / שיק מבוטל"],
+    surgery: ["הפניה לניתוח", "קבלה ייעוץ טרום ניתוח", "אישור ניהול חשבון / שיק מבוטל"],
+    child: ["הפניה מרופא מומחה", "קבלות", "אישור ניהול חשבון / שיק מבוטל"],
+    accident: ["דו\"ח רפואי המציין שבר", "אישור ניהול חשבון / שיק מבוטל"]
+};
+const DOC_ICONS = {
+    "קבלה": "🧾", "קבלות": "🧾", "סיכום ביקור": "📋", "סיכום ביקור רפואי": "📋",
+    "הפניה לטיפול": "📝", "הפניה לבדיקה": "📝", "הפניה לניתוח": "📝", "הפניה מרופא מומחה": "📝",
+    "תעודת מטפל מוסמך": "🎓", "קבלה ייעוץ טרום ניתוח": "🧾",
+    "אישור ניהול חשבון / שיק מבוטל": "🏦",
+    "דו\"ח רפואי המציין שבר": "🦴"
+};
+const CLAIM_TYPES = [
+    {
         id: "consultation", icon: "🩺", label: "ייעוץ רפואי מומחה", color: "#0ea5e9", light: "#e0f2fe",
         sublabel: "ייעוץ עם רופא מומחה",
         docs: "קבלה + סיכום ביקור + אישור ניהול חשבון / שיק מבוטל",
-        prompt: "אתה עוזר לתביעת ביטוח בריאות בנושא ייעוץ רפואי עם רופא מומחה. דבר בעברית בלבד.\n" + COMMON_RULES + "\nאסוף את הפרטים הבאים — שאלה אחת בכל הודעה:\n1. שם מלא\n2. תעודת זהות של המבוטח\n3. מספר פוליסה (אם ידוע)\n4. שם הרופא המומחה\n5. התמחות הרופא\n6. תאריך הביקור\n7. סכום ששולם\n8. האם הופנה על ידי רופא משפחה?\nלאחר כל הפרטים — בקש ללחוץ על כפתור העלאת מסמכים."
-      },
-      {
+        prompt: "אתה עוזר לתביעת ביטוח בריאות בנושא ייעוץ רפואי עם רופא מומחה. דבר בעברית בלבד.\nאנחנו כאן לעזור לך להגיש את תביעתך במהירות ובקלות!\n" + COMMON_RULES + "\nאסוף את הפרטים הבאים בשיחה טבעית ונעימה:\n1. שם מלא\n2. תעודת זהות של המבוטח שעבורו מוגשת התביעה\n3. מספר פוליסה (אם ידוע)\n4. שם הרופא / מומחה שנתן הייעוץ\n5. התמחות הרופא (קרדיולוג, אורתופד וכד')\n6. תאריך הביקור\n7. סכום ששולם\n8. האם הופנה על ידי רופא משפחה? (כן/לא)\nלאחר איסוף הפרטים — הפנה ללחוץ על כפתור העלאת מסמכים במסך.\nבסוף — סכם הכל ובקש אישור. אחרי אישור — כתוב בדיוק: \"✅ התביעה נשלחה!\""
+    },
+    {
         id: "alternative", icon: "🌿", label: "רפואה משלימה ופיזיותרפיה", color: "#22c55e", light: "#dcfce7",
         sublabel: "טיפולים אלטרנטיביים כולל פיזיותרפיה",
         docs: "הפניה לטיפול + תעודת מטפל מוסמך + קבלות + אישור ניהול חשבון / שיק מבוטל",
-        prompt: "אתה עוזר לתביעת ביטוח בריאות בנושא רפואה משלימה ופיזיותרפיה. דבר בעברית בלבד.\n" + COMMON_RULES + "\nאסוף את הפרטים הבאים — שאלה אחת בכל הודעה:\n1. שם מלא\n2. תעודת זהות של המבוטח\n3. מספר פוליסה (אם ידוע)\n4. סוג הטיפול\n5. שם המטפל / מרפאה\n6. תאריך הטיפול\n7. מספר טיפולים\n8. סכום כולל ששולם\nחשוב: תשלום לחשבון המבוטח בלבד.\nלאחר כל הפרטים — בקש ללחוץ על כפתור העלאת מסמכים."
-      },
-      {
+        prompt: "אתה עוזר לתביעת ביטוח בריאות בנושא רפואה משלימה ופיזיותרפיה. דבר בעברית בלבד.\nאנחנו כאן לעזור לך להגיש את תביעתך במהירות ובקלות!\n" + COMMON_RULES + "\nאסוף את הפרטים הבאים בשיחה טבעית ונעימה:\n1. שם מלא\n2. תעודת זהות של המבוטח שעבורו מוגשת התביעה\n3. מספר פוליסה (אם ידוע)\n4. סוג הטיפול (דיקור, כירופרקטיקה, נטורופתיה, פיזיותרפיה וכד')\n5. שם המטפל / מרפאה\n6. תאריך הטיפול\n7. מספר הטיפולים (אם סדרה)\n8. סכום כולל ששולם\nחשוב: תשלום יועבר אך ורק לחשבון המבוטח עצמו.\nלאחר איסוף הפרטים — הפנה ללחוץ על כפתור העלאת מסמכים במסך.\nבסוף — סכם הכל ובקש אישור. אחרי אישור — כתוב בדיוק: \"✅ התביעה נשלחה!\""
+    },
+    {
         id: "diagnostic", icon: "🔬", label: "בדיקה אבחנתית", color: "#8b5cf6", light: "#ede9fe",
         sublabel: "MRI, CT, בדיקות הריון ועוד",
         docs: "הפניה לבדיקה + סיכום ביקור רפואי + קבלה + אישור ניהול חשבון / שיק מבוטל",
-        prompt: "אתה עוזר לתביעת ביטוח בריאות בנושא בדיקה אבחנתית. דבר בעברית בלבד.\n" + COMMON_RULES + "\nאסוף את הפרטים הבאים — שאלה אחת בכל הודעה:\n1. שם מלא\n2. תעודת זהות של המבוטח\n3. מספר פוליסה (אם ידוע)\n4. סוג הבדיקה\n5. איבר / אזור שנבדק\n6. שם המרכז הרפואי\n7. תאריך הבדיקה\n8. האם יש הפניה רפואית?\n9. סכום ששולם\nלאחר כל הפרטים — בקש ללחוץ על כפתור העלאת מסמכים."
-      },
-      {
+        prompt: "אתה עוזר לתביעת ביטוח בריאות בנושא בדיקה אבחנתית. דבר בעברית בלבד.\nאנחנו כאן לעזור לך להגיש את תביעתך במהירות ובקלות!\n" + COMMON_RULES + "\nאסוף את הפרטים הבאים בשיחה טבעית ונעימה:\n1. שם מלא\n2. תעודת זהות של המבוטח שעבורו מוגשת התביעה\n3. מספר פוליסה (אם ידוע)\n4. סוג הבדיקה (MRI, CT, אולטרסאונד, בדיקת דם מיוחדת וכד')\n5. איבר / אזור שנבדק\n6. שם המרכז הרפואי / מעבדה\n7. תאריך הבדיקה\n8. האם יש הפניה רפואית? (חובה לרוב)\n9. סכום ששולם\nלאחר איסוף הפרטים — הפנה ללחוץ על כפתור העלאת מסמכים במסך.\nבסוף — סכם הכל ובקש אישור. אחרי אישור — כתוב בדיוק: \"✅ התביעה נשלחה!\""
+    },
+    {
         id: "surgery", icon: "🏥", label: "ניתוח בארץ", color: "#ef4444", light: "#fee2e2",
         sublabel: "פוליסות מ-02/2016 בלבד — לפני כן פנה לסוכן",
         docs: "הפניה לניתוח + קבלה ייעוץ טרום ניתוח + אישור ניהול חשבון / שיק מבוטל",
-        prompt: "אתה עוזר לתביעת ביטוח בריאות בנושא ניתוח בארץ. דבר בעברית בלבד.\n" + COMMON_RULES + "\nכיסוי קיים רק בפוליסות מ-02/2016 ואילך. לפני כן — הפנה לסוכן 03-3731410.\nאסוף את הפרטים הבאים — שאלה אחת בכל הודעה:\n1. שם מלא\n2. תעודת זהות של המבוטח\n3. מספר פוליסה\n4. מתי נרכשה הפוליסה?\n5. שם הניתוח / הפעולה\n6. שם בית החולים\n7. שם המנתח\n8. תאריך הניתוח\n9. האם דחוף או מתוכנן?\n10. ימי אשפוז\n11. עלות המנתח הפרטי\n12. עלות הרדמה פרטית\n13. הוצאות נוספות\nלאחר כל הפרטים — בקש ללחוץ על כפתור העלאת מסמכים."
-      },
-      {
+        prompt: "אתה עוזר לתביעת ביטוח בריאות בנושא ניתוח בארץ. דבר בעברית בלבד. היה חם וסבלני.\nאנחנו כאן לעזור לך להגיש את תביעתך במהירות ובקלות!\n" + COMMON_RULES + "\nכיסוי קיים רק בפוליסות מ-02/2016 ואילך. אם לפני כן — הפנה לסוכן 03-3731410.\nאסוף את הפרטים הבאים בשיחה טבעית ונעימה:\n1. שם מלא\n2. תעודת זהות של המבוטח שעבורו מוגשת התביעה\n3. מספר פוליסה\n4. מתי נרכשה הפוליסה? (לפני או אחרי 02/2016)\n5. שם הניתוח / הפעולה הרפואית\n6. שם בית החולים / המרכז הרפואי\n7. שם המנתח הראשי\n8. תאריך הניתוח\n9. האם ניתוח דחוף או מתוכנן?\n10. ימי אשפוז (אם רלוונטי)\n11. עלות המנתח הפרטי (אם רלוונטי)\n12. עלות הרדמה פרטית (אם רלוונטי)\n13. הוצאות נוספות (תרופות, ציוד וכד')\nלאחר איסוף הפרטים — הפנה ללחוץ על כפתור העלאת מסמכים במסך.\nבסוף — סכם הכל ובקש אישור. אחרי אישור — כתוב בדיוק: \"✅ התביעה נשלחה!\""
+    },
+    {
         id: "child", icon: "👶", label: "התפתחות הילד", color: "#f59e0b", light: "#fef3c7",
         sublabel: "פסיכולוג, קלינאי, ריפוי בעיסוק, שחייה/רכיבה טיפולית ועוד...",
         docs: "הפניה מרופא מומחה + קבלות + אישור ניהול חשבון / שיק מבוטל",
-        prompt: "אתה עוזר לתביעת ביטוח בריאות בנושא התפתחות הילד. דבר בעברית בלבד.\n" + COMMON_RULES + "\nהפניה חייבת ממומחה התפתחות הילד (ותק 3+ שנים) או נוירולוג ילדים בלבד. אחרת — הפנה לסוכן 03-3731410.\nאסוף את הפרטים הבאים — שאלה אחת בכל הודעה:\n1. שם מלא של ההורה\n2. תעודת זהות של הילד המבוטח\n3. מספר פוליסה (אם ידוע)\n4. סוג הטיפול\n5. שם המטפל / מרפאה\n6. תאריך תחילת הטיפולים\n7. מספר טיפולים\n8. עלות לטיפול וסה\"כ\n9. פרטי הרופא המפנה\nלאחר כל הפרטים — בקש ללחוץ על כפתור העלאת מסמכים."
-      },
-      {
+        prompt: "אתה עוזר לתביעת ביטוח בריאות בנושא התפתחות הילד. דבר בעברית בלבד. היה חם ומסביר פנים.\nאנחנו כאן לעזור לך להגיש את תביעתך במהירות ובקלות!\n" + COMMON_RULES + "\nהפניה חייבת מ: מומחה התפתחות הילד (ותק 3+ שנים) או נוירולוג ילדים בלבד. אחרת — הפנה לסוכן 03-3731410.\nהטיפולים כוללים: פסיכולוג, קלינאי תקשורת, ריפוי בעיסוק, שחייה טיפולית, רכיבה טיפולית, ייעוצים התפתחותיים.\nאסוף את הפרטים הבאים בשיחה טבעית ונעימה:\n1. שם מלא של ההורה / מגיש התביעה\n2. תעודת זהות של המבוטח (הילד)\n3. מספר פוליסה (אם ידוע)\n4. סוג הטיפול (פסיכולוג, קלינאי תקשורת, ריפוי בעיסוק וכד')\n5. שם המטפל / מרפאה\n6. תאריך תחילת הטיפולים\n7. מספר טיפולים שבוצעו\n8. עלות לטיפול + סה\"כ\n9. פרטי הרופא המפנה (שם + התמחות)\nלאחר איסוף הפרטים — הפנה ללחוץ על כפתור העלאת מסמכים במסך.\nבסוף — סכם הכל ובקש אישור. אחרי אישור — כתוב בדיוק: \"✅ התביעה נשלחה!\""
+    },
+    {
         id: "accident", icon: "🚑", label: "תאונות אישיות — שברים", color: "#db2777", light: "#fce7f3",
         sublabel: "שברים בלבד — לכל דבר אחר פנה לסוכן",
         docs: "דו\"ח רפואי המציין שבר + אישור ניהול חשבון / שיק מבוטל",
-        prompt: "אתה עוזר לתביעת ביטוח בנושא תאונות אישיות — שברים בלבד. דבר בעברית בלבד.\n" + COMMON_RULES + "\nשברים בלבד. פציעה אחרת — הפנה לסוכן 03-3731410.\nאסוף את הפרטים הבאים — שאלה אחת בכל הודעה:\n1. שם מלא\n2. תעודת זהות של המבוטח\n3. מספר פוליסה (אם ידוע)\n4. תיאור התאונה\n5. תאריך ושעת התאונה\n6. מקום התאונה\n7. איזה איבר נשבר?\n8. האם טופל בחדר מיון? באיזה בית חולים?\n9. האם אושפז? כמה ימים?\n10. ימי אי כושר עבודה?\n11. האם בוצע ניתוח?\n12. סך הוצאות רפואיות\nלאחר כל הפרטים — בקש ללחוץ על כפתור העלאת מסמכים."
-      }
-    ];
- 
-    // ולידציה תעודת זהות ישראלית
-    const isValidIsraeliID = (id) => {
-      const cleaned = String(id).trim();
-      if (!/^\d{9}$/.test(cleaned)) return false;
-      let sum = 0;
-      for (let i = 0; i < 9; i++) {
+        prompt: "אתה עוזר לתביעת ביטוח בנושא תאונות אישיות — שברים בלבד. דבר בעברית בלבד. היה חם ואמפתי.\n" + COMMON_RULES + "\nקטגוריה זו לשברים בלבד. פציעה אחרת (חתכים, נקעים, חבלות) — הפנה לסוכן 03-3731410.\nאסוף את הפרטים הבאים בשיחה טבעית ונעימה:\n1. שם מלא\n2. תעודת זהות של המבוטח שעבורו מוגשת התביעה\n3. מספר פוליסה (אם ידוע)\n4. תיאור התאונה — מה קרה?\n5. תאריך ושעת התאונה\n6. מקום התאונה (בית, רחוב, עבודה וכד')\n7. איזה איבר / אזור נשבר?\n8. האם טופל בחדר מיון? באיזה בית חולים?\n9. האם אושפז? כמה ימים?\n10. האם יש ימי אי כושר עבודה? כמה ימים?\n11. האם בוצע ניתוח כתוצאה מהתאונה?\n12. סך כל ההוצאות הרפואיות\nלאחר איסוף הפרטים — הפנה ללחוץ על כפתור העלאת מסמכים במסך.\nבסוף — סכם הכל ובקש אישור. אחרי אישור — כתוב בדיוק: \"✅ התביעה נשלחה!\""
+    }
+];
+// ולידציה תעודת זהות ישראלית
+const isValidIsraeliID = (id) => {
+    const cleaned = String(id).trim();
+    if (!/^\d{9}$/.test(cleaned))
+        return false;
+    let sum = 0;
+    for (let i = 0; i < 9; i++) {
         let digit = parseInt(cleaned[i]) * ((i % 2) + 1);
-        if (digit > 9) digit -= 9;
+        if (digit > 9)
+            digit -= 9;
         sum += digit;
-      }
-      return sum % 10 === 0;
-    };
- 
-    // שמירת היסטוריה ב-sessionStorage
-    const STORAGE_KEY = "kd_chat_history";
-    const saveHistory = (claimId, history) => {
-      try {
-        const all = JSON.parse(sessionStorage.getItem(STORAGE_KEY) || "{}");
-        all[claimId] = history;
-        sessionStorage.setItem(STORAGE_KEY, JSON.stringify(all));
-      } catch(e) {}
-    };
- 
-    // חילוץ כל שאלות ותשובות מהיסטוריה (לוובהוק)
-    const extractAnswers = (history) => {
-      const answers = [];
-      for (let i = 0; i < history.length; i++) {
-        const msg = history[i];
-        if (msg.role === "assistant") {
-          const nextUser = history[i + 1];
-          if (nextUser && nextUser.role === "user" && !nextUser.content.startsWith("✅")) {
-            const label = msg.content.replace(/\n/g, " ").slice(0, 120) + (msg.content.length > 120 ? "..." : "");
-            answers.push({ fieldId: "q_" + answers.length, label, value: nextUser.content });
-          }
+    }
+    return sum % 10 === 0;
+};
+// חילוץ שם מלא ות.ז — זיהוי לפי התשובות עצמן (עובד בכל סוגי התביעות)
+const extractAnswers = (history) => {
+    const userMsgs = history.filter(m => m.role === "user").map(m => m.content.trim());
+    // ת.ז = ההודעה הראשונה של הלקוח שהיא 9 ספרות
+    const idValue = userMsgs.find(v => /^\d{9}$/.test(v.replace(/[\s-]/g, ""))) || "";
+    // שם מלא = ההודעה הראשונה של הלקוח שמכילה אותיות (ולא רק מספרים)
+    const nameValue = userMsgs.find(v => /[א-תa-zA-Z]{2,}/.test(v) && !/^[\d\s-]+$/.test(v)) || "";
+    return [
+        { fieldId: "full_name", label: "שם מלא", value: nameValue },
+        { fieldId: "id_number", label: "תעודת זהות", value: idValue ? idValue.replace(/[\s-]/g, "") : "" }
+    ];
+};
+// שליחה ל-Webhook
+const WEBHOOK_URL = "https://hook.eu1.make.com/y1kwo7yb6r2xxvt81m1er9cj2586qa3l";
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
+const fileToBase64 = (file) => new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(",")[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+});
+const sendToWebhook = async (claimType, history, uploadedDocs) => {
+    const documents = await Promise.all(Object.entries(uploadedDocs).map(async ([docName, file]) => {
+        let base64 = null;
+        try {
+            base64 = await fileToBase64(file);
         }
-      }
-      return answers;
-    };
- 
-    // שליחה ל-Webhook
-    const WEBHOOK_URL = "https://hook.eu1.make.com/y1kwo7yb6r2xxvt81m1er9cj2586qa3l";
-    const MAX_FILE_SIZE = 5 * 1024 * 1024;
- 
-    const fileToBase64 = (file) => new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result.split(",")[1]);
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
- 
-    const sendToWebhook = async (claimType, history, uploadedDocs) => {
-      const documents = await Promise.all(
-        Object.entries(uploadedDocs).map(async ([docName, file]) => {
-          let base64 = null;
-          try { base64 = await fileToBase64(file); } catch(e) {}
-          return { documentName: docName, fileName: file.name, mimeType: file.type || "application/octet-stream", fileSize: file.size, base64 };
-        })
-      );
-      const payload = {
+        catch (e) { }
+        return { documentName: docName, fileName: file.name, mimeType: file.type || "application/octet-stream", fileSize: file.size, base64 };
+    }));
+    const payload = {
         submissionId: "KD-" + Date.now(),
         submittedAt: new Date().toISOString(),
         claimType: { id: claimType.id, label: claimType.label },
         answers: extractAnswers(history),
         documents
-      };
-      try {
-        await fetch(WEBHOOK_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
-      } catch(e) { console.warn("Webhook error:", e); }
     };
- 
-    // רכיב כרטיס העלאת מסמך
-    function DocCard({ docName, accent, onFileChange, uploadedFile }) {
-      const [dragOver, setDragOver] = useState(false);
-      const [sizeError, setSizeError] = useState(false);
-      const inputRef = useRef(null);
-      const icon = DOC_ICONS[docName] || "📄";
- 
-      const handleFile = (file) => {
-        if (file.size > MAX_FILE_SIZE) { setSizeError(true); setTimeout(() => setSizeError(false), 4000); return; }
+    try {
+        await fetch(WEBHOOK_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+    }
+    catch (e) {
+        console.warn("Webhook error:", e);
+    }
+};
+// רכיב כרטיס העלאת מסמך
+function DocCard({ docName, accent, onFileChange, uploadedFile }) {
+    const [dragOver, setDragOver] = useState(false);
+    const [sizeError, setSizeError] = useState(false);
+    const inputRef = useRef(null);
+    const icon = DOC_ICONS[docName] || "📄";
+    const handleFile = (file) => {
+        if (file.size > MAX_FILE_SIZE) {
+            setSizeError(true);
+            setTimeout(() => setSizeError(false), 4000);
+            return;
+        }
         setSizeError(false);
         onFileChange(docName, file);
-      };
- 
-      const handleDrop = (e) => {
-        e.preventDefault(); setDragOver(false);
+    };
+    const handleDrop = (e) => {
+        e.preventDefault();
+        setDragOver(false);
         const file = e.dataTransfer.files[0];
-        if (file) handleFile(file);
-      };
- 
-      return (
-        <div className={`doc-card ${uploadedFile ? "has-file" : ""}`}
-          style={{ background:"#fff", borderRadius:16, padding:"16px", boxShadow:"0 2px 12px rgba(0,0,0,0.07)", border: uploadedFile ? "2px solid #22c55e" : "2px solid #f1f5f9", animation:"slideUp 0.3s ease both" }}>
-          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:12 }}>
-            <span style={{ fontSize:11, fontWeight:700, color:"#94a3b8", textTransform:"uppercase", letterSpacing:"0.5px" }}>מסמך נדרש</span>
-            <span style={{ fontSize:13, fontWeight:700, color:"#1e293b" }}>{docName}</span>
-          </div>
-          {!uploadedFile ? (
-            <div className="upload-zone" onClick={() => inputRef.current?.click()}
-              onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-              onDragLeave={() => setDragOver(false)} onDrop={handleDrop}
-              style={{ border:`2px dashed ${dragOver ? accent : "#cbd5e1"}`, borderRadius:12, padding:"20px 16px", textAlign:"center", cursor:"pointer", background: dragOver ? "#f0f9ff" : "#fafbfc", transition:"all 0.2s" }}>
-              <div style={{ fontSize:36, marginBottom:8 }}>{icon}</div>
-              <div style={{ fontSize:13, fontWeight:600, color:"#1e293b", marginBottom:4 }}>גרור קובץ לכאן</div>
-              <div style={{ fontSize:12, color:"#94a3b8", marginBottom:10 }}>או</div>
-              <div style={{ display:"inline-block", background:accent, color:"#fff", borderRadius:20, padding:"6px 16px", fontSize:12, fontWeight:700 }}>בחר קובץ</div>
-              <div style={{ fontSize:10, color:"#cbd5e1", marginTop:8 }}>PDF, JPG, PNG, Word</div>
-            </div>
-          ) : (
-            <div style={{ background:"#f0fdf4", borderRadius:12, padding:"14px 16px", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
-              <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-                <div style={{ width:36, height:36, borderRadius:10, background:"#22c55e", display:"flex", alignItems:"center", justifyContent:"center", fontSize:18 }}>✅</div>
-                <div>
-                  <div style={{ fontSize:12, fontWeight:700, color:"#15803d" }}>הועלה בהצלחה</div>
-                  <div style={{ fontSize:11, color:"#16a34a", maxWidth:160, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{uploadedFile.name}</div>
-                </div>
-              </div>
-              <button onClick={() => onFileChange(docName, null)}
-                style={{ background:"none", border:"1px solid #86efac", borderRadius:20, padding:"4px 10px", fontSize:11, color:"#15803d", cursor:"pointer", fontFamily:"'Heebo',sans-serif" }}>החלף</button>
-            </div>
-          )}
-          {sizeError && (
-            <div style={{ background:"#fef2f2", border:"1px solid #fca5a5", borderRadius:10, padding:"8px 12px", marginTop:8, fontSize:12, color:"#dc2626", textAlign:"center" }}>
-              ⚠️ הקובץ גדול מדי! גודל מקסימלי: 5MB
-            </div>
-          )}
-          <input ref={inputRef} type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-            onChange={e => { if(e.target.files[0]) handleFile(e.target.files[0]); e.target.value=""; }}
-            style={{ display:"none" }} />
-        </div>
-      );
-    }
- 
-    function DocUploadPanel({ claimId, accent, onAllUploaded, uploadedDocs, onFileChange }) {
-      const docs = CLAIM_DOCS[claimId] || [];
-      const uploadedCount = docs.filter(d => uploadedDocs[d]).length;
-      const hasAtLeastOne = uploadedCount > 0;
-      const allUploaded = docs.every(d => uploadedDocs[d]);
- 
-      return (
-        <div style={{ background:"#f8fafc", padding:"16px", borderTop:"1px solid #f1f5f9" }}>
-          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:14 }}>
-            <div style={{ fontSize:13, fontWeight:700, color:"#1e293b" }}>📎 העלאת מסמכים</div>
-            <div style={{ fontSize:12, color: allUploaded ? "#15803d" : "#64748b" }}>{uploadedCount}/{docs.length} הועלו{allUploaded && " ✅"}</div>
-          </div>
-          <div style={{ background:"#e2e8f0", borderRadius:10, height:6, marginBottom:16 }}>
-            <div style={{ background:accent, height:"100%", borderRadius:10, width:`${(uploadedCount/docs.length)*100}%`, transition:"width 0.4s ease" }} />
-          </div>
-          <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
-            {docs.map((doc) => (
-              <DocCard key={doc} docName={doc} accent={accent} uploadedFile={uploadedDocs[doc] || null} onFileChange={onFileChange} />
-            ))}
-          </div>
-          {hasAtLeastOne && (
-            <button onClick={onAllUploaded}
-              style={{ marginTop:14, width:"100%", background:`linear-gradient(135deg, ${accent}, ${accent}dd)`, color:"#fff", border:"none", borderRadius:12, padding:"16px", fontSize:15, fontWeight:800, cursor:"pointer", fontFamily:"'Heebo',sans-serif", boxShadow:`0 6px 20px ${accent}55`, animation:"popIn 0.3s ease", letterSpacing:"0.3px" }}>
-              📤 לחץ כאן לשליחת המסמכים והגשת התביעה
-            </button>
-          )}
-          {hasAtLeastOne && !allUploaded && (
-            <div style={{ textAlign:"center", marginTop:8, fontSize:12, color:"#f59e0b", fontWeight:600 }}>
-              ⚠️ לא כל המסמכים הועלו — ניתן לשלוח אך מומלץ להעלות את כולם
-            </div>
-          )}
-          {hasAtLeastOne && allUploaded && (
-            <div style={{ textAlign:"center", marginTop:8, fontSize:12, color:"#94a3b8" }}>
-              ⬆️ יש ללחוץ על הכפתור כדי להשלים את הגשת התביעה
-            </div>
-          )}
-          {!hasAtLeastOne && (
-            <div style={{ textAlign:"center", marginTop:14, padding:"12px", background:"#fef2f2", borderRadius:10, fontSize:12, color:"#dc2626", fontWeight:600, border:"1px solid #fca5a5" }}>
-              ❌ יש להעלות לפחות מסמך אחד לפני השליחה
-            </div>
-          )}
-        </div>
-      );
-    }
- 
-    const TypingDots = ({color}) => (
-      <div style={{display:"flex",gap:5,padding:"8px 4px",alignItems:"center"}}>
-        {[0,1,2].map(i=><div key={i} style={{width:8,height:8,borderRadius:"50%",background:color,animation:"bounce 1.2s infinite",animationDelay:`${i*0.2}s`}}/>)}
-      </div>
-    );
- 
-    function App() {
-      const [ct, setCt] = useState(null);
-      const [messages, setMessages] = useState([]);
-      const [input, setInput] = useState("");
-      const [loading, setLoading] = useState(false);
-      const [submitted, setSubmitted] = useState(false);
-      const [history, setHistory] = useState([]);
-      const [showUpload, setShowUpload] = useState(false);
-      const [uploadedDocs, setUploadedDocs] = useState({});
-      const bottomRef = useRef(null);
- 
-      useEffect(()=>{bottomRef.current?.scrollIntoView({behavior:"smooth"});},[messages,loading,showUpload]);
- 
-      // שמור היסטוריה ב-sessionStorage בכל שינוי
-      useEffect(()=>{ if(ct && history.length > 0) saveHistory(ct.id, history); },[history]);
- 
-      const reset=()=>{ setCt(null);setMessages([]);setHistory([]);setSubmitted(false);setInput("");setShowUpload(false);setUploadedDocs({}); };
- 
-      const startChat=(type)=>{
+        if (file)
+            handleFile(file);
+    };
+    return (React.createElement("div", { className: `doc-card ${uploadedFile ? "has-file" : ""}`, style: { background: "#fff", borderRadius: 16, padding: "16px", boxShadow: "0 2px 12px rgba(0,0,0,0.07)", border: uploadedFile ? "2px solid #22c55e" : "2px solid #f1f5f9", animation: "slideUp 0.3s ease both" } },
+        React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 } },
+            React.createElement("span", { style: { fontSize: 11, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.5px" } }, "\u05DE\u05E1\u05DE\u05DA \u05E0\u05D3\u05E8\u05E9"),
+            React.createElement("span", { style: { fontSize: 13, fontWeight: 700, color: "#1e293b" } }, docName)),
+        !uploadedFile ? (React.createElement("div", { className: "upload-zone", onClick: () => { var _a; return (_a = inputRef.current) === null || _a === void 0 ? void 0 : _a.click(); }, onDragOver: (e) => { e.preventDefault(); setDragOver(true); }, onDragLeave: () => setDragOver(false), onDrop: handleDrop, style: { border: `2px dashed ${dragOver ? accent : "#cbd5e1"}`, borderRadius: 12, padding: "20px 16px", textAlign: "center", cursor: "pointer", background: dragOver ? "#f0f9ff" : "#fafbfc", transition: "all 0.2s" } },
+            React.createElement("div", { style: { fontSize: 36, marginBottom: 8 } }, icon),
+            React.createElement("div", { style: { fontSize: 13, fontWeight: 600, color: "#1e293b", marginBottom: 4 } }, "\u05D2\u05E8\u05D5\u05E8 \u05E7\u05D5\u05D1\u05E5 \u05DC\u05DB\u05D0\u05DF"),
+            React.createElement("div", { style: { fontSize: 12, color: "#94a3b8", marginBottom: 10 } }, "\u05D0\u05D5"),
+            React.createElement("div", { style: { display: "inline-block", background: accent, color: "#fff", borderRadius: 20, padding: "6px 16px", fontSize: 12, fontWeight: 700 } }, "\u05D1\u05D7\u05E8 \u05E7\u05D5\u05D1\u05E5"),
+            React.createElement("div", { style: { fontSize: 10, color: "#cbd5e1", marginTop: 8 } }, "PDF, JPG, PNG, Word"))) : (React.createElement("div", { style: { background: "#f0fdf4", borderRadius: 12, padding: "14px 16px", display: "flex", alignItems: "center", justifyContent: "space-between" } },
+            React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10 } },
+                React.createElement("div", { style: { width: 36, height: 36, borderRadius: 10, background: "#22c55e", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 } }, "\u2705"),
+                React.createElement("div", null,
+                    React.createElement("div", { style: { fontSize: 12, fontWeight: 700, color: "#15803d" } }, "\u05D4\u05D5\u05E2\u05DC\u05D4 \u05D1\u05D4\u05E6\u05DC\u05D7\u05D4"),
+                    React.createElement("div", { style: { fontSize: 11, color: "#16a34a", maxWidth: 160, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, uploadedFile.name))),
+            React.createElement("button", { onClick: () => onFileChange(docName, null), style: { background: "none", border: "1px solid #86efac", borderRadius: 20, padding: "4px 10px", fontSize: 11, color: "#15803d", cursor: "pointer", fontFamily: "'Heebo',sans-serif" } }, "\u05D4\u05D7\u05DC\u05E3"))),
+        sizeError && (React.createElement("div", { style: { background: "#fef2f2", border: "1px solid #fca5a5", borderRadius: 10, padding: "8px 12px", marginTop: 8, fontSize: 12, color: "#dc2626", textAlign: "center" } }, "\u26A0\uFE0F \u05D4\u05E7\u05D5\u05D1\u05E5 \u05D2\u05D3\u05D5\u05DC \u05DE\u05D3\u05D9! \u05D2\u05D5\u05D3\u05DC \u05DE\u05E7\u05E1\u05D9\u05DE\u05DC\u05D9: 5MB")),
+        React.createElement("input", { ref: inputRef, type: "file", accept: ".pdf,.jpg,.jpeg,.png,.doc,.docx", onChange: e => { if (e.target.files[0])
+                handleFile(e.target.files[0]); e.target.value = ""; }, style: { display: "none" } })));
+}
+function DocUploadPanel({ claimId, accent, onAllUploaded, uploadedDocs, onFileChange }) {
+    const docs = CLAIM_DOCS[claimId] || [];
+    const uploadedCount = docs.filter(d => uploadedDocs[d]).length;
+    const hasAtLeastOne = uploadedCount > 0;
+    const allUploaded = docs.every(d => uploadedDocs[d]);
+    return (React.createElement("div", { style: { background: "#f8fafc", padding: "16px", borderTop: "1px solid #f1f5f9" } },
+        React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 } },
+            React.createElement("div", { style: { fontSize: 13, fontWeight: 700, color: "#1e293b" } }, "\uD83D\uDCCE \u05D4\u05E2\u05DC\u05D0\u05EA \u05DE\u05E1\u05DE\u05DB\u05D9\u05DD"),
+            React.createElement("div", { style: { fontSize: 12, color: allUploaded ? "#15803d" : "#64748b" } },
+                uploadedCount,
+                "/",
+                docs.length,
+                " \u05D4\u05D5\u05E2\u05DC\u05D5",
+                allUploaded && " ✅")),
+        React.createElement("div", { style: { background: "#e2e8f0", borderRadius: 10, height: 6, marginBottom: 16 } },
+            React.createElement("div", { style: { background: accent, height: "100%", borderRadius: 10, width: `${(uploadedCount / docs.length) * 100}%`, transition: "width 0.4s ease" } })),
+        React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 10 } }, docs.map((doc) => (React.createElement(DocCard, { key: doc, docName: doc, accent: accent, uploadedFile: uploadedDocs[doc] || null, onFileChange: onFileChange })))),
+        hasAtLeastOne && (React.createElement("button", { onClick: onAllUploaded, style: { marginTop: 14, width: "100%", background: `linear-gradient(135deg, ${accent}, ${accent}dd)`, color: "#fff", border: "none", borderRadius: 12, padding: "16px", fontSize: 15, fontWeight: 800, cursor: "pointer", fontFamily: "'Heebo',sans-serif", boxShadow: `0 6px 20px ${accent}55`, animation: "popIn 0.3s ease", letterSpacing: "0.3px" } }, "\uD83D\uDCE4 \u05DC\u05D7\u05E5 \u05DB\u05D0\u05DF \u05DC\u05E9\u05DC\u05D9\u05D7\u05EA \u05D4\u05DE\u05E1\u05DE\u05DB\u05D9\u05DD \u05D5\u05D4\u05D2\u05E9\u05EA \u05D4\u05EA\u05D1\u05D9\u05E2\u05D4")),
+        hasAtLeastOne && !allUploaded && (React.createElement("div", { style: { textAlign: "center", marginTop: 8, fontSize: 12, color: "#f59e0b", fontWeight: 600 } }, "\u26A0\uFE0F \u05DC\u05D0 \u05DB\u05DC \u05D4\u05DE\u05E1\u05DE\u05DB\u05D9\u05DD \u05D4\u05D5\u05E2\u05DC\u05D5 \u2014 \u05E0\u05D9\u05EA\u05DF \u05DC\u05E9\u05DC\u05D5\u05D7 \u05D0\u05DA \u05DE\u05D5\u05DE\u05DC\u05E5 \u05DC\u05D4\u05E2\u05DC\u05D5\u05EA \u05D0\u05EA \u05DB\u05D5\u05DC\u05DD")),
+        hasAtLeastOne && allUploaded && (React.createElement("div", { style: { textAlign: "center", marginTop: 8, fontSize: 12, color: "#94a3b8" } }, "\u2B06\uFE0F \u05D9\u05E9 \u05DC\u05DC\u05D7\u05D5\u05E5 \u05E2\u05DC \u05D4\u05DB\u05E4\u05EA\u05D5\u05E8 \u05DB\u05D3\u05D9 \u05DC\u05D4\u05E9\u05DC\u05D9\u05DD \u05D0\u05EA \u05D4\u05D2\u05E9\u05EA \u05D4\u05EA\u05D1\u05D9\u05E2\u05D4")),
+        !hasAtLeastOne && (React.createElement("div", { style: { textAlign: "center", marginTop: 14, padding: "12px", background: "#fef2f2", borderRadius: 10, fontSize: 12, color: "#dc2626", fontWeight: 600, border: "1px solid #fca5a5" } }, "\u274C \u05D9\u05E9 \u05DC\u05D4\u05E2\u05DC\u05D5\u05EA \u05DC\u05E4\u05D7\u05D5\u05EA \u05DE\u05E1\u05DE\u05DA \u05D0\u05D7\u05D3 \u05DC\u05E4\u05E0\u05D9 \u05D4\u05E9\u05DC\u05D9\u05D7\u05D4"))));
+}
+const TypingDots = ({ color }) => (React.createElement("div", { style: { display: "flex", gap: 5, padding: "8px 4px", alignItems: "center" } }, [0, 1, 2].map(i => React.createElement("div", { key: i, style: { width: 8, height: 8, borderRadius: "50%", background: color, animation: "bounce 1.2s infinite", animationDelay: `${i * 0.2}s` } }))));
+function App() {
+    const [ct, setCt] = useState(null);
+    const [messages, setMessages] = useState([]);
+    const [input, setInput] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [submitted, setSubmitted] = useState(false);
+    const [history, setHistory] = useState([]);
+    const [showUpload, setShowUpload] = useState(false);
+    const [uploadedDocs, setUploadedDocs] = useState({});
+    const bottomRef = useRef(null);
+    useEffect(() => { var _a; (_a = bottomRef.current) === null || _a === void 0 ? void 0 : _a.scrollIntoView({ behavior: "smooth" }); }, [messages, loading, showUpload]);
+    const reset = () => { setCt(null); setMessages([]); setHistory([]); setSubmitted(false); setInput(""); setShowUpload(false); setUploadedDocs({}); };
+    const startChat = (type) => {
         setCt(type);
-        // הודעת פתיחה — רק ברכה ובקשת שם, ללא רשימת מסמכים
-        setMessages([
-          {role:"assistant", content:"היי! 👋 אני הרובוט החכם של סוכנות Kaplan & Dahan 🤖\nאני כאן לעזור לך להגיש את תביעתך במהירות ובקלות!"},
-          {role:"assistant", content:"מה שמך המלא?"}
-        ]);
-        setHistory([]);setSubmitted(false);setShowUpload(false);setUploadedDocs({});setInput("");
-      };
- 
-      const handleFileChange = (docName, file) => {
+        setMessages([{ role: "assistant", content: `היי! 👋 אני הרובוט החכם של סוכנות Kaplan & Dahan 🤖\nאני כאן לעזור לך להגיש את תביעתך במהירות ובקלות!\n\nתצטרך:\n• ${type.docs}\n\nנתחיל — מה שמך המלא?` }]);
+        setHistory([]);
+        setSubmitted(false);
+        setShowUpload(false);
+        setUploadedDocs({});
+        setInput("");
+    };
+    const handleFileChange = (docName, file) => {
         setUploadedDocs(prev => {
-          const updated = {...prev};
-          if (file === null) delete updated[docName];
-          else updated[docName] = file;
-          return updated;
+            const updated = { ...prev };
+            if (file === null)
+                delete updated[docName];
+            else
+                updated[docName] = file;
+            return updated;
         });
-      };
- 
-      const handleAllUploaded = async () => {
-        if (Object.keys(uploadedDocs).length === 0) return;
+    };
+    const handleAllUploaded = async () => {
+        if (Object.keys(uploadedDocs).length === 0)
+            return;
         sendToWebhook(ct, history, uploadedDocs);
         const missingDocs = (CLAIM_DOCS[ct.id] || []).filter(d => !uploadedDocs[d]);
-        setMessages(p=>[...p,{role:"user",content:"✅ שלחתי את המסמכים",files:Object.values(uploadedDocs)}]);
+        setMessages(p => [...p, { role: "user", content: "✅ שלחתי את המסמכים", files: Object.values(uploadedDocs) }]);
         setShowUpload(false);
         setSubmitted(true);
         const successMsg = missingDocs.length > 0
-          ? `✅ התביעה נשלחה!\n\nהמסמכים שהעלית התקבלו ועברו לטיפול.\n\n⚠️ שים לב: המסמכים הבאים חסרים ועשויים לעכב את הטיפול:\n${missingDocs.map(d=>`• ${d}`).join("\n")}\n\nנציג יצור איתך קשר בהקדם. לשאלות: 03-3731410`
-          : `✅ התביעה נשלחה בהצלחה!\n\nכל המסמכים התקבלו ועברו לבדיקה.\nנעדכן אותך בהתקדמות התביעה בהקדם 😊\n\nלשאלות: 03-3731410`;
-        setMessages(p=>[...p,{role:"assistant",content:successMsg}]);
-      };
- 
-      const sendMessage=async(text)=>{
-        if(!text.trim())return;
-        if(submitted||!ct)return;
- 
+            ? `✅ התביעה נשלחה!\n\nהמסמכים שהעלית התקבלו ועברו לטיפול.\n\n⚠️ שים לב: המסמכים הבאים חסרים ועשויים לעכב את הטיפול:\n${missingDocs.map(d => `• ${d}`).join("\n")}\n\nנציג יצור איתך קשר בהקדם. לשאלות: 03-3731410`
+            : `✅ התביעה נשלחה בהצלחה!\n\nכל המסמכים התקבלו ועברו לבדיקה.\nנעדכן אותך בהתקדמות התביעה בהקדם 😊\n\nלשאלות: 03-3731410`;
+        setMessages(p => [...p, { role: "assistant", content: successMsg }]);
+    };
+    const sendMessage = async (text) => {
+        var _a, _b;
+        if (!text.trim())
+            return;
+        if (submitted || !ct)
+            return;
         // ולידציה ת.ז
         const lastAssistantMsg = [...history].reverse().find(m => m.role === "assistant");
         const isAskingForID = lastAssistantMsg && (lastAssistantMsg.content.includes("תעודת זהות") || lastAssistantMsg.content.includes("ת.ז") || lastAssistantMsg.content.includes("מספר זהות"));
         if (isAskingForID && /^\d+$/.test(text.trim()) && !isValidIsraeliID(text.trim())) {
-          setMessages(p=>[...p,{role:"user",content:text},{role:"assistant",content:"⚠️ מספר תעודת הזהות שהזנת אינו תקין.\nתעודת זהות ישראלית חייבת להכיל 9 ספרות תקינות.\nנא להזין שוב:"}]);
-          setInput(""); return;
+            setMessages(p => [...p, { role: "user", content: text }, { role: "assistant", content: "⚠️ מספר תעודת הזהות שהזנת אינו תקין.\nתעודת זהות ישראלית חייבת להכיל 9 ספרות תקינות.\nנא להזין שוב:" }]);
+            setInput("");
+            return;
         }
- 
-        const newHistory=[...history,{role:"user",content:text}];
-        setMessages(p=>[...p,{role:"user",content:text}]);
-        setInput("");setLoading(true);
-        try{
-          const res=await fetch("https://kd-chat.tviot.workers.dev",{method:"POST",headers:{"Content-Type":"application/json"},
-            body:JSON.stringify({model:"claude-sonnet-4-5",max_tokens:1000,system:ct.prompt,messages:newHistory})});
-          const data=await res.json();
-          const reply=data.content?.[0]?.text||"מצטער, הייתה שגיאה.";
-          setMessages(p=>[...p,{role:"assistant",content:reply}]);
-          const updatedHistory = [...newHistory,{role:"assistant",content:reply}];
-          setHistory(updatedHistory);
-          if(reply.includes("העלה") || reply.includes("העלאת") || reply.includes("מסמכים") || reply.includes("כפתור")) {
-            setShowUpload(true);
-          }
-          if(reply.includes("✅ התביעה נשלחה")) setSubmitted(true);
-        }catch{setMessages(p=>[...p,{role:"assistant",content:"אופס! בעיית חיבור. נסה שוב 🙏"}]);}
-        finally{setLoading(false);}
-      };
- 
-      const accent=ct?.color||"#1e293b";
-      const light=ct?.light||"#f1f5f9";
- 
-      return(
-        <div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",padding:12}}>
-          <div style={{width:"100%",maxWidth:660,borderRadius:24,overflow:"hidden",boxShadow:"0 20px 60px rgba(0,0,0,0.13)",display:"flex",flexDirection:"column"}}>
- 
-            {/* Header */}
-            <div style={{background:"#fff",padding:"12px 20px",borderBottom:"1px solid #f1f5f9",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-              <div style={{display:"flex",alignItems:"center",gap:10}}>
-                {/* לוגו — Google Drive */}
-                <img
-                  src="https://drive.google.com/thumbnail?id=1RK62SzV7NeV0ke0qqFf_1vGmEbpCC4b-&sz=w80"
-                  alt="KD Logo"
-                  style={{width:40,height:40,borderRadius:10,objectFit:"contain",background:"#f8fafc"}}
-                  onError={e=>{e.target.style.display="none";e.target.nextSibling.style.display="flex";}}
-                />
-                <div style={{width:40,height:40,borderRadius:10,background:"#1e293b",display:"none",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:18,fontWeight:800}}>KD</div>
-                <div><div style={{fontSize:14,fontWeight:800,color:"#1e293b"}}>KAPLAN & DAHAN</div><div style={{fontSize:11,color:"#94a3b8"}}>פירמת ביטוח ופיננסים</div></div>
-              </div>
-              <a href="tel:03-3731410" style={{display:"flex",alignItems:"center",gap:6,background:ct?accent:"#1e293b",color:"#fff",borderRadius:20,padding:"7px 14px",textDecoration:"none",fontSize:13,fontWeight:700,fontFamily:"'Heebo',sans-serif",transition:"background 0.3s"}}>📞 03-3731410</a>
-            </div>
- 
-            {/* Sub header */}
-            <div style={{background:ct?accent:"#1e293b",padding:"11px 20px",display:"flex",alignItems:"center",justifyContent:"space-between",transition:"background 0.4s"}}>
-              <div style={{display:"flex",alignItems:"center",gap:10}}>
-                <div style={{width:34,height:34,borderRadius:"50%",background:"rgba(255,255,255,0.2)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}>{ct?ct.icon:"🏥"}</div>
-                <div><div style={{color:"#fff",fontWeight:700,fontSize:14}}>{ct?`תביעת ${ct.label}`:"מערכת תביעות ביטוח בריאות"}</div><div style={{color:"rgba(255,255,255,0.7)",fontSize:11.5}}>{loading?"✍️ מקליד...":ct?"🟢 פעיל":"בחר סוג תביעה להתחלה"}</div></div>
-              </div>
-              {ct&&<button onClick={reset} style={{background:"rgba(255,255,255,0.18)",border:"none",color:"#fff",borderRadius:20,padding:"5px 13px",cursor:"pointer",fontSize:12,fontFamily:"'Heebo',sans-serif"}}>← חזור</button>}
-            </div>
- 
-            {!ct?(
-              <div style={{background:"#fff",padding:"24px 20px"}}>
-                <div style={{textAlign:"center",marginBottom:22}}><div style={{fontSize:20,fontWeight:800,color:"#1e293b",marginBottom:4}}>איזה סוג תביעה תרצה להגיש?</div><div style={{fontSize:13.5,color:"#64748b"}}>בחר קטגוריה ונתחיל</div></div>
-                <div style={{display:"flex",flexDirection:"column",gap:10}}>
-                  {CLAIM_TYPES.map((type,i)=>(
-                    <button key={type.id} className="tbtn" onClick={()=>startChat(type)} style={{display:"flex",alignItems:"center",gap:14,padding:"15px 18px",background:"#fff",border:"2px solid #f1f5f9",borderRadius:14,textAlign:"right",width:"100%",animation:`fadeUp 0.28s ease ${i*0.06}s both`,boxShadow:"0 2px 8px rgba(0,0,0,0.05)"}}>
-                      <div style={{width:48,height:48,borderRadius:12,flexShrink:0,background:type.light,display:"flex",alignItems:"center",justifyContent:"center",fontSize:24}}>{type.icon}</div>
-                      <div style={{flex:1}}>
-                        <div style={{fontSize:15,fontWeight:700,color:"#1e293b",marginBottom:2}}>{type.label}</div>
-                        {type.sublabel&&<div style={{fontSize:11.5,color:type.color,fontWeight:600,marginBottom:2}}>{type.sublabel}</div>}
-                        <div style={{fontSize:11,color:"#94a3b8"}}>📎 {type.docs}</div>
-                      </div>
-                      <div style={{width:30,height:30,borderRadius:"50%",background:type.light,display:"flex",alignItems:"center",justifyContent:"center",color:type.color,fontSize:16}}>←</div>
-                    </button>
-                  ))}
-                </div>
-                <div style={{marginTop:16,padding:"10px 16px",background:"#f8fafc",borderRadius:10,fontSize:12,color:"#94a3b8",textAlign:"center"}}>🔒 המידע שלך מאובטח · tviot@kd-ins.co.il</div>
-                <a href="tel:03-3731410" style={{marginTop:10,display:"flex",alignItems:"center",justifyContent:"center",gap:10,padding:"13px 20px",borderRadius:12,textDecoration:"none",background:"#f0fdf4",border:"2px solid #bbf7d0",color:"#15803d",fontFamily:"'Heebo',sans-serif"}}>
-                  <span style={{fontSize:20}}>📞</span>
-                  <div style={{textAlign:"center"}}><div style={{fontSize:13}}>מעדיפים לדבר עם נציג?</div><div style={{fontSize:17,fontWeight:800}}>03-3731410</div></div>
-                </a>
-              </div>
-            ):(
-              <>
-                {/* Messages */}
-                <div style={{background:"#f8fafc",padding:"18px 16px 10px",overflowY:"auto",minHeight:280,maxHeight:380,display:"flex",flexDirection:"column",gap:12}}>
-                  {messages.map((m,i)=>(
-                    <div key={i} style={{display:"flex",flexDirection:m.role==="user"?"row":"row-reverse",alignItems:"flex-end",gap:8,animation:"popIn 0.22s ease"}}>
-                      <div style={{width:32,height:32,borderRadius:"50%",flexShrink:0,background:m.role==="user"?"#e2e8f0":light,display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}}>{m.role==="user"?"🧑":ct.icon}</div>
-                      <div style={{maxWidth:"75%"}}>
-                        <div style={{padding:"10px 14px",borderRadius:m.role==="user"?"18px 18px 18px 4px":"18px 18px 4px 18px",background:m.role==="user"?"#fff":accent,color:m.role==="user"?"#1e293b":"#fff",fontSize:14,lineHeight:1.7,whiteSpace:"pre-wrap",wordBreak:"break-word",boxShadow:"0 2px 8px rgba(0,0,0,0.06)",border:m.role==="user"?"1px solid #e2e8f0":"none"}}>{m.content}</div>
-                        {m.files?.length>0&&<div style={{display:"flex",flexWrap:"wrap",gap:4,marginTop:4}}>{m.files.map((f,fi)=><div key={fi} style={{background:light,borderRadius:20,padding:"2px 10px",fontSize:11.5,color:accent}}>📎 {typeof f==="string"?f:f.name}</div>)}</div>}
-                      </div>
-                    </div>
-                  ))}
-                  {loading&&<div style={{display:"flex",flexDirection:"row-reverse",alignItems:"flex-end",gap:8}}><div style={{width:32,height:32,borderRadius:"50%",background:light,display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}}>{ct.icon}</div><div style={{padding:"4px 14px",borderRadius:"18px 18px 4px 18px",background:accent,boxShadow:"0 2px 8px rgba(0,0,0,0.07)"}}><TypingDots color="#fff"/></div></div>}
-                  {submitted&&(
-                    <div style={{textAlign:"center",padding:"20px",background:"#f0fdf4",border:"2px solid #86efac",borderRadius:16,animation:"popIn 0.4s ease"}}>
-                      <div style={{fontSize:38,marginBottom:6}}>🎉</div>
-                      <div style={{fontWeight:800,color:"#15803d",fontSize:17}}>התביעה הוגשה בהצלחה!</div>
-                      <div style={{color:"#16a34a",fontSize:14,marginTop:8,lineHeight:1.7}}>✅ המסמכים התקבלו ועברו לבדיקה<br/>נעדכן אותך בהתקדמות התביעה בהקדם 😊</div>
-                      <div style={{color:"#94a3b8",fontSize:12,marginTop:6}}>לבירורים: 03-3731410</div>
-                      <button onClick={reset} style={{marginTop:12,background:"#22c55e",color:"#fff",border:"none",borderRadius:20,padding:"8px 20px",fontSize:13,cursor:"pointer",fontFamily:"'Heebo',sans-serif",fontWeight:700}}>הגש תביעה נוספת ←</button>
-                    </div>
-                  )}
-                  <div ref={bottomRef}/>
-                </div>
- 
-                {/* Upload Panel — מוצג רק כשהגיעו לשלב המסמכים */}
-                {showUpload && !submitted && (
-                  <DocUploadPanel claimId={ct.id} accent={accent} uploadedDocs={uploadedDocs} onFileChange={handleFileChange} onAllUploaded={handleAllUploaded} />
-                )}
- 
-                {/* Input */}
-                {!submitted && (
-                  <div style={{background:"#fff",borderTop:"1px solid #f1f5f9",padding:"12px 14px",display:"flex",gap:8,alignItems:"flex-end"}}>
-                    <textarea value={input} onChange={e=>setInput(e.target.value)}
-                      onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendMessage(input);}}}
-                      placeholder="כתוב כאן... (Enter לשליחה)" rows={1} disabled={loading}
-                      style={{flex:1,border:"2px solid #e2e8f0",borderRadius:14,padding:"10px 13px",fontSize:14,outline:"none",resize:"none",lineHeight:1.6,background:"#f8fafc",maxHeight:100,overflowY:"auto",transition:"border-color 0.2s"}}
-                      onFocus={e=>e.target.style.borderColor=accent}
-                      onBlur={e=>e.target.style.borderColor="#e2e8f0"}/>
-                    <button onClick={()=>sendMessage(input)} disabled={!input.trim()||loading}
-                      style={{width:42,height:42,borderRadius:"50%",border:"none",background:!input.trim()||loading?"#e2e8f0":accent,color:!input.trim()||loading?"#94a3b8":"#fff",cursor:!input.trim()||loading?"not-allowed":"pointer",fontSize:17,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"all 0.2s"}}>➤</button>
-                  </div>
-                )}
-                <div style={{background:"#f8fafc",padding:"6px 14px",fontSize:11,color:"#94a3b8",textAlign:"center",borderTop:"1px solid #f1f5f9"}}>🔒 מאובטח · PDF, תמונות ו-Word מתקבלים</div>
-              </>
-            )}
-          </div>
-        </div>
-      );
-    }
-    ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
-  </script>
+        const newHistory = [...history, { role: "user", content: text }];
+        setMessages(p => [...p, { role: "user", content: text }]);
+        setInput("");
+        setLoading(true);
+        try {
+            const res = await fetch("https://kd-chat.tviot.workers.dev", { method: "POST", headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ model: "claude-sonnet-4-5", max_tokens: 1000, system: ct.prompt, messages: newHistory }) });
+            const data = await res.json();
+            const reply = ((_b = (_a = data.content) === null || _a === void 0 ? void 0 : _a[0]) === null || _b === void 0 ? void 0 : _b.text) || "מצטער, הייתה שגיאה.";
+            setMessages(p => [...p, { role: "assistant", content: reply }]);
+            setHistory([...newHistory, { role: "assistant", content: reply }]);
+            if (reply.includes("העלה") || reply.includes("העלאת") || reply.includes("מסמכים") || reply.includes("כפתור")) {
+                setShowUpload(true);
+            }
+            if (reply.includes("✅ התביעה נשלחה"))
+                setSubmitted(true);
+        }
+        catch {
+            setMessages(p => [...p, { role: "assistant", content: "אופס! בעיית חיבור. נסה שוב 🙏" }]);
+        }
+        finally {
+            setLoading(false);
+        }
+    };
+    const accent = (ct === null || ct === void 0 ? void 0 : ct.color) || "#1e293b";
+    const light = (ct === null || ct === void 0 ? void 0 : ct.light) || "#f1f5f9";
+    return (React.createElement("div", { style: { minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 12 } },
+        React.createElement("div", { style: { width: "100%", maxWidth: 660, borderRadius: 24, overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.13)", display: "flex", flexDirection: "column" } },
+            React.createElement("div", { style: { background: "#fff", padding: "12px 20px", borderBottom: "1px solid #f1f5f9", display: "flex", alignItems: "center", justifyContent: "space-between" } },
+                React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10 } },
+                    React.createElement("div", { style: { width: 40, height: 40, borderRadius: 10, background: "#1e293b", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 18, fontWeight: 800 } }, "KD"),
+                    React.createElement("div", null,
+                        React.createElement("div", { style: { fontSize: 14, fontWeight: 800, color: "#1e293b" } }, "KAPLAN & DAHAN"),
+                        React.createElement("div", { style: { fontSize: 11, color: "#94a3b8" } }, "\u05E4\u05D9\u05E8\u05DE\u05EA \u05D1\u05D9\u05D8\u05D5\u05D7 \u05D5\u05E4\u05D9\u05E0\u05E0\u05E1\u05D9\u05DD"))),
+                React.createElement("a", { href: "tel:03-3731410", style: { display: "flex", alignItems: "center", gap: 6, background: ct ? accent : "#1e293b", color: "#fff", borderRadius: 20, padding: "7px 14px", textDecoration: "none", fontSize: 13, fontWeight: 700, fontFamily: "'Heebo',sans-serif", transition: "background 0.3s" } }, "\uD83D\uDCDE 03-3731410")),
+            React.createElement("div", { style: { background: ct ? accent : "#1e293b", padding: "11px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", transition: "background 0.4s" } },
+                React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10 } },
+                    React.createElement("div", { style: { width: 34, height: 34, borderRadius: "50%", background: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 } }, ct ? ct.icon : "🏥"),
+                    React.createElement("div", null,
+                        React.createElement("div", { style: { color: "#fff", fontWeight: 700, fontSize: 14 } }, ct ? `תביעת ${ct.label}` : "מערכת תביעות ביטוח בריאות"),
+                        React.createElement("div", { style: { color: "rgba(255,255,255,0.7)", fontSize: 11.5 } }, loading ? "✍️ מקליד..." : ct ? "🟢 פעיל" : "בחר סוג תביעה להתחלה"))),
+                ct && React.createElement("button", { onClick: reset, style: { background: "rgba(255,255,255,0.18)", border: "none", color: "#fff", borderRadius: 20, padding: "5px 13px", cursor: "pointer", fontSize: 12, fontFamily: "'Heebo',sans-serif" } }, "\u2190 \u05D7\u05D6\u05D5\u05E8")),
+            !ct ? (React.createElement("div", { style: { background: "#fff", padding: "24px 20px" } },
+                React.createElement("div", { style: { textAlign: "center", marginBottom: 22 } },
+                    React.createElement("div", { style: { fontSize: 20, fontWeight: 800, color: "#1e293b", marginBottom: 4 } }, "\u05D0\u05D9\u05D6\u05D4 \u05E1\u05D5\u05D2 \u05EA\u05D1\u05D9\u05E2\u05D4 \u05EA\u05E8\u05E6\u05D4 \u05DC\u05D4\u05D2\u05D9\u05E9?"),
+                    React.createElement("div", { style: { fontSize: 13.5, color: "#64748b" } }, "\u05D1\u05D7\u05E8 \u05E7\u05D8\u05D2\u05D5\u05E8\u05D9\u05D4 \u05D5\u05E0\u05EA\u05D7\u05D9\u05DC")),
+                React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 10 } }, CLAIM_TYPES.map((type, i) => (React.createElement("button", { key: type.id, className: "tbtn", onClick: () => startChat(type), style: { display: "flex", alignItems: "center", gap: 14, padding: "15px 18px", background: "#fff", border: "2px solid #f1f5f9", borderRadius: 14, textAlign: "right", width: "100%", animation: `fadeUp 0.28s ease ${i * 0.06}s both`, boxShadow: "0 2px 8px rgba(0,0,0,0.05)" } },
+                    React.createElement("div", { style: { width: 48, height: 48, borderRadius: 12, flexShrink: 0, background: type.light, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24 } }, type.icon),
+                    React.createElement("div", { style: { flex: 1 } },
+                        React.createElement("div", { style: { fontSize: 15, fontWeight: 700, color: "#1e293b", marginBottom: 2 } }, type.label),
+                        type.sublabel && React.createElement("div", { style: { fontSize: 11.5, color: type.color, fontWeight: 600, marginBottom: 2 } }, type.sublabel),
+                        React.createElement("div", { style: { fontSize: 11, color: "#94a3b8" } },
+                            "\uD83D\uDCCE ",
+                            type.docs)),
+                    React.createElement("div", { style: { width: 30, height: 30, borderRadius: "50%", background: type.light, display: "flex", alignItems: "center", justifyContent: "center", color: type.color, fontSize: 16 } }, "\u2190"))))),
+                React.createElement("div", { style: { marginTop: 16, padding: "10px 16px", background: "#f8fafc", borderRadius: 10, fontSize: 12, color: "#94a3b8", textAlign: "center" } }, "\uD83D\uDD12 \u05D4\u05DE\u05D9\u05D3\u05E2 \u05E9\u05DC\u05DA \u05DE\u05D0\u05D5\u05D1\u05D8\u05D7 \u00B7 tviot@kd-ins.co.il"),
+                React.createElement("a", { href: "tel:03-3731410", style: { marginTop: 10, display: "flex", alignItems: "center", justifyContent: "center", gap: 10, padding: "13px 20px", borderRadius: 12, textDecoration: "none", background: "#f0fdf4", border: "2px solid #bbf7d0", color: "#15803d", fontFamily: "'Heebo',sans-serif" } },
+                    React.createElement("span", { style: { fontSize: 20 } }, "\uD83D\uDCDE"),
+                    React.createElement("div", { style: { textAlign: "center" } },
+                        React.createElement("div", { style: { fontSize: 13 } }, "\u05DE\u05E2\u05D3\u05D9\u05E4\u05D9\u05DD \u05DC\u05D3\u05D1\u05E8 \u05E2\u05DD \u05E0\u05E6\u05D9\u05D2?"),
+                        React.createElement("div", { style: { fontSize: 17, fontWeight: 800 } }, "03-3731410"))))) : (React.createElement(React.Fragment, null,
+                React.createElement("div", { style: { background: "#f8fafc", padding: "18px 16px 10px", overflowY: "auto", minHeight: 280, maxHeight: 380, display: "flex", flexDirection: "column", gap: 12 } },
+                    messages.map((m, i) => {
+                        var _a;
+                        return (React.createElement("div", { key: i, style: { display: "flex", flexDirection: m.role === "user" ? "row" : "row-reverse", alignItems: "flex-end", gap: 8, animation: "popIn 0.22s ease" } },
+                            React.createElement("div", { style: { width: 32, height: 32, borderRadius: "50%", flexShrink: 0, background: m.role === "user" ? "#e2e8f0" : light, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 } }, m.role === "user" ? "🧑" : ct.icon),
+                            React.createElement("div", { style: { maxWidth: "75%" } },
+                                React.createElement("div", { style: { padding: "10px 14px", borderRadius: m.role === "user" ? "18px 18px 18px 4px" : "18px 18px 4px 18px", background: m.role === "user" ? "#fff" : accent, color: m.role === "user" ? "#1e293b" : "#fff", fontSize: 14, lineHeight: 1.7, whiteSpace: "pre-wrap", wordBreak: "break-word", boxShadow: "0 2px 8px rgba(0,0,0,0.06)", border: m.role === "user" ? "1px solid #e2e8f0" : "none" } }, m.content),
+                                ((_a = m.files) === null || _a === void 0 ? void 0 : _a.length) > 0 && React.createElement("div", { style: { display: "flex", flexWrap: "wrap", gap: 4, marginTop: 4 } }, m.files.map((f, fi) => React.createElement("div", { key: fi, style: { background: light, borderRadius: 20, padding: "2px 10px", fontSize: 11.5, color: accent } },
+                                    "\uD83D\uDCCE ",
+                                    typeof f === "string" ? f : f.name))))));
+                    }),
+                    loading && React.createElement("div", { style: { display: "flex", flexDirection: "row-reverse", alignItems: "flex-end", gap: 8 } },
+                        React.createElement("div", { style: { width: 32, height: 32, borderRadius: "50%", background: light, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 } }, ct.icon),
+                        React.createElement("div", { style: { padding: "4px 14px", borderRadius: "18px 18px 4px 18px", background: accent, boxShadow: "0 2px 8px rgba(0,0,0,0.07)" } },
+                            React.createElement(TypingDots, { color: "#fff" }))),
+                    submitted && (React.createElement("div", { style: { textAlign: "center", padding: "20px", background: "#f0fdf4", border: "2px solid #86efac", borderRadius: 16, animation: "popIn 0.4s ease" } },
+                        React.createElement("div", { style: { fontSize: 38, marginBottom: 6 } }, "\uD83C\uDF89"),
+                        React.createElement("div", { style: { fontWeight: 800, color: "#15803d", fontSize: 17 } }, "\u05D4\u05EA\u05D1\u05D9\u05E2\u05D4 \u05D4\u05D5\u05D2\u05E9\u05D4 \u05D1\u05D4\u05E6\u05DC\u05D7\u05D4!"),
+                        React.createElement("div", { style: { color: "#16a34a", fontSize: 14, marginTop: 8, lineHeight: 1.7 } },
+                            "\u2705 \u05D4\u05DE\u05E1\u05DE\u05DB\u05D9\u05DD \u05D4\u05EA\u05E7\u05D1\u05DC\u05D5 \u05D5\u05E2\u05D1\u05E8\u05D5 \u05DC\u05D1\u05D3\u05D9\u05E7\u05D4",
+                            React.createElement("br", null),
+                            "\u05E0\u05E2\u05D3\u05DB\u05DF \u05D0\u05D5\u05EA\u05DA \u05D1\u05D4\u05EA\u05E7\u05D3\u05DE\u05D5\u05EA \u05D4\u05EA\u05D1\u05D9\u05E2\u05D4 \u05D1\u05D4\u05E7\u05D3\u05DD \uD83D\uDE0A"),
+                        React.createElement("div", { style: { color: "#94a3b8", fontSize: 12, marginTop: 6 } }, "\u05DC\u05D1\u05D9\u05E8\u05D5\u05E8\u05D9\u05DD: 03-3731410"),
+                        React.createElement("button", { onClick: reset, style: { marginTop: 12, background: "#22c55e", color: "#fff", border: "none", borderRadius: 20, padding: "8px 20px", fontSize: 13, cursor: "pointer", fontFamily: "'Heebo',sans-serif", fontWeight: 700 } }, "\u05D4\u05D2\u05E9 \u05EA\u05D1\u05D9\u05E2\u05D4 \u05E0\u05D5\u05E1\u05E4\u05EA \u2190"))),
+                    React.createElement("div", { ref: bottomRef })),
+                showUpload && !submitted && (React.createElement(DocUploadPanel, { claimId: ct.id, accent: accent, uploadedDocs: uploadedDocs, onFileChange: handleFileChange, onAllUploaded: handleAllUploaded })),
+                !showUpload && !submitted && (React.createElement("div", { style: { background: "#fff", borderTop: "1px solid #f1f5f9", padding: "8px 14px", textAlign: "center" } },
+                    React.createElement("button", { onClick: () => setShowUpload(true), style: { background: light, color: accent, border: `1px solid ${accent}33`, borderRadius: 20, padding: "6px 16px", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'Heebo',sans-serif" } }, "\uD83D\uDCCE \u05D4\u05E2\u05DC\u05D4 \u05DE\u05E1\u05DE\u05DB\u05D9\u05DD"))),
+                !submitted && (React.createElement("div", { style: { background: "#fff", borderTop: "1px solid #f1f5f9", padding: "12px 14px", display: "flex", gap: 8, alignItems: "flex-end" } },
+                    React.createElement("textarea", { value: input, onChange: e => setInput(e.target.value), onKeyDown: e => { if (e.key === "Enter" && !e.shiftKey) {
+                            e.preventDefault();
+                            sendMessage(input);
+                        } }, placeholder: "\u05DB\u05EA\u05D5\u05D1 \u05DB\u05D0\u05DF... (Enter \u05DC\u05E9\u05DC\u05D9\u05D7\u05D4)", rows: 1, disabled: loading, style: { flex: 1, border: "2px solid #e2e8f0", borderRadius: 14, padding: "10px 13px", fontSize: 14, outline: "none", resize: "none", lineHeight: 1.6, background: "#f8fafc", maxHeight: 100, overflowY: "auto", transition: "border-color 0.2s" }, onFocus: e => e.target.style.borderColor = accent, onBlur: e => e.target.style.borderColor = "#e2e8f0" }),
+                    React.createElement("button", { onClick: () => sendMessage(input), disabled: !input.trim() || loading, style: { width: 42, height: 42, borderRadius: "50%", border: "none", background: !input.trim() || loading ? "#e2e8f0" : accent, color: !input.trim() || loading ? "#94a3b8" : "#fff", cursor: !input.trim() || loading ? "not-allowed" : "pointer", fontSize: 17, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "all 0.2s" } }, "\u27A4"))),
+                React.createElement("div", { style: { background: "#f8fafc", padding: "6px 14px", fontSize: 11, color: "#94a3b8", textAlign: "center", borderTop: "1px solid #f1f5f9" } }, "\uD83D\uDD12 \u05DE\u05D0\u05D5\u05D1\u05D8\u05D7 \u00B7 PDF, \u05EA\u05DE\u05D5\u05E0\u05D5\u05EA \u05D5-Word \u05DE\u05EA\u05E7\u05D1\u05DC\u05D9\u05DD"))))));
+}
+ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(App, null));
+
+</script>
 </body>
 </html>
